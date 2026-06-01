@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -19,45 +18,55 @@ class PdfService {
             pw.Wrap(
               spacing: 20,
               runSpacing: 20,
+
+              // 🔥 MULTIPLE LABELS BASED ON STOCK
               children: List.generate(quantity, (index) {
                 return pw.Container(
-                  width: 200,
+                  width: 180,
                   padding: const pw.EdgeInsets.all(10),
                   decoration: pw.BoxDecoration(
-                    border: pw.Border.all(),
+                    border: pw.Border.all(color: PdfColors.black),
                   ),
                   child: pw.Column(
+                    mainAxisSize: pw.MainAxisSize.min,
                     children: [
+                      
+                      // PRODUCT NAME
                       pw.Text(
                         productName,
                         style: pw.TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: pw.FontWeight.bold,
                         ),
                       ),
 
-                      pw.SizedBox(height: 10),
+                      pw.SizedBox(height: 8),
 
-                      // Barcode image from online generator
+                      // BARCODE
                       pw.BarcodeWidget(
                         barcode: pw.Barcode.code128(),
                         data: barcode,
-                        width: 180,
-                        height: 60,
+                        width: 150,
+                        height: 50,
                       ),
 
-                      pw.SizedBox(height: 10),
+                      pw.SizedBox(height: 8),
 
+                      // QR CODE
                       pw.BarcodeWidget(
                         barcode: pw.Barcode.qrCode(),
                         data: barcode,
-                        width: 100,
-                        height: 100,
+                        width: 80,
+                        height: 80,
                       ),
 
-                      pw.SizedBox(height: 10),
+                      pw.SizedBox(height: 5),
 
-                      pw.Text(barcode),
+                      // TEXT BARCODE
+                      pw.Text(
+                        barcode,
+                        style: const pw.TextStyle(fontSize: 10),
+                      ),
                     ],
                   ),
                 );

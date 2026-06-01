@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'database/db_helper.dart';
-import 'product_detail_screen.dart';
+
+import '../services/product_service.dart';
 
 class StoreListScreen extends StatefulWidget {
   const StoreListScreen({super.key});
@@ -18,11 +18,8 @@ class _StoreListScreenState extends State<StoreListScreen> {
     loadData();
   }
 
-  // LOAD DATA FROM DB
   void loadData() async {
-    final data = await DBHelper.getAll();
-
-    if (!mounted) return;
+    final data = await ProductService.getAllProducts();
 
     setState(() {
       products = data;
@@ -32,10 +29,7 @@ class _StoreListScreenState extends State<StoreListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Store Products"),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text("Store Products")),
       body: products.isEmpty
           ? const Center(child: Text("No Products Found"))
           : ListView.builder(
@@ -45,25 +39,9 @@ class _StoreListScreenState extends State<StoreListScreen> {
 
                 return Card(
                   child: ListTile(
-                    title: Text(item['name']),
+                    title: Text(item['name'].toString()),
                     subtitle: Text("Stock: ${item['stock']}"),
-                    trailing: const Icon(Icons.arrow_forward_ios),
-
-                    // 🔥 IMPORTANT FIX HERE
-                    onTap: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              ProductDetailScreen(product: item),
-                        ),
-                      );
-
-                      // 🔥 refresh after delete
-                      if (result == true) {
-                        loadData();
-                      }
-                    },
+                    trailing: Text("৳${item['selling_price']}"),
                   ),
                 );
               },

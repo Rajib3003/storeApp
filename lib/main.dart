@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'scan_screen.dart';
-import 'generate_barcode_screen.dart';
-import 'store_list_screen.dart';
+
+import 'features/sell/screens/scan_screen.dart';
+import 'features/product/screens/generate_barcode_screen.dart';
+import 'features/product/screens/store_list_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,6 +16,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Store App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+      ),
       home: const HomePage(),
     );
   }
@@ -27,7 +32,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Store App"),
+        title: const Text("Store Dashboard"),
         centerTitle: true,
       ),
       body: Padding(
@@ -36,27 +41,25 @@ class HomePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
 
+            // 🔥 SCAN (SELL)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () async {
-                  final result = await Navigator.push(
+                onPressed: () {
+                  Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const ScanScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const ScanScreen(),
+                    ),
                   );
-
-                  if (result != null) {
-                    print("Scanned Code: $result");
-                  }
                 },
-                child: const Text("BARCODE SCAN"),
+                child: const Text("SCAN & SELL"),
               ),
             ),
 
             const SizedBox(height: 20),
 
-            
-
+            // 🔥 GENERATE PRODUCT
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -68,20 +71,13 @@ class HomePage extends StatelessWidget {
                     ),
                   );
                 },
-                child: const Text("GENERATE BARCODE"),
+                child: const Text("ADD PRODUCT"),
               ),
             ),
+
             const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Scan OUT
-                },
-                child: const Text("SCAN OUT (SELL STOCK)"),
-              ),
-            ),
-            const SizedBox(height: 20),
+
+            // 🔥 STORE LIST
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -89,11 +85,11 @@ class HomePage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => StoreListScreen(),
+                      builder: (_) => const StoreListScreen(),
                     ),
                   );
                 },
-                child: const Text("VIEW STORE"),
+                child: const Text("VIEW PRODUCTS"),
               ),
             ),
           ],

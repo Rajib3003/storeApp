@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
 import 'dart:math';
-import 'db_helper.dart';
+import 'package:flutter/material.dart';
 import 'package:barcode_widget/barcode_widget.dart';
-import 'pdf_service.dart';
+
+import '../services/product_service.dart';
+import '../../../services/pdf_service.dart';
 
 class GenerateBarcodeScreen extends StatefulWidget {
   const GenerateBarcodeScreen({super.key});
@@ -12,8 +13,7 @@ class GenerateBarcodeScreen extends StatefulWidget {
       _GenerateBarcodeScreenState();
 }
 
-class _GenerateBarcodeScreenState
-    extends State<GenerateBarcodeScreen> {
+class _GenerateBarcodeScreenState extends State<GenerateBarcodeScreen> {
   final nameController = TextEditingController();
   final purchaseController = TextEditingController();
   final sellingController = TextEditingController();
@@ -22,7 +22,7 @@ class _GenerateBarcodeScreenState
   String barcode = "";
   bool isPrinted = false;
 
-  // 🔥 Generate Barcode
+  // 🔥 Generate barcode
   void generateBarcode() {
     final random = Random();
 
@@ -32,7 +32,7 @@ class _GenerateBarcodeScreenState
     });
   }
 
-  // 🔥 QR DATA (IMPORTANT FIX)
+  // 🔥 QR DATA
   String get qrData => '''
 {
   "name": "${nameController.text}",
@@ -43,10 +43,18 @@ class _GenerateBarcodeScreenState
 }
 ''';
 
-  // 🔥 Save Product
-  void saveProduct() async {
-    if (barcode.isEmpty ||
-        nameController.text.isEmpty ||
+  // 🔥 SAVE PRODUCT
+  Future<void> saveProduct() async {
+    print("SAVE CLICKED");
+
+    if (barcode.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please generate barcode first")),
+      );
+      return;
+    }
+
+    if (nameController.text.isEmpty ||
         purchaseController.text.isEmpty ||
         sellingController.text.isEmpty ||
         stockController.text.isEmpty) {
@@ -56,36 +64,74 @@ class _GenerateBarcodeScreenState
       return;
     }
 
-    await DBHelper.insertProduct({
-      "name": nameController.text.trim(),
-      "barcode": barcode,
-      "purchase_price": double.parse(purchaseController.text),
-      "selling_price": double.parse(sellingController.text),
-      "stock": int.parse(stockController.text),
-    });
+    try {
+      await ProductService.insertProduct({
+        "name": nameController.text.trim(),
+        "barcode": barcode,
+        "purchase_price": double.tryParse(purchaseController.text) ?? 0,
+        "selling_price": double.tryParse(sellingController.text) ?? 0,
+        "stock": int.tryParse(stockController.text) ?? 0,
+      });
 
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Product Saved Successfully")),
+      );
+
+      // ❗ IMPORTANT: barcode clear করবো না
+      clearFormKeepBarcode();
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Save Failed: $e")),
+      );
+    }
+  }
+
+  // 🔥 CLEAR ONLY FORM (barcode KEEP)
+  void clearFormKeepBarcode() {
+    nameController.clear();
+    purchaseController.clear();
+    sellingController.clear();
+    stockController.clear();
+
+    setState(() {
+      isPrinted = false;
+    });
+  }
+
+  // 🔥 PRINT LABEL
+  void printLabel() {
+    if (barcode.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please generate barcode first")),
+      );
+      return;
+    }
+
+    final qtyText = stockController.text.trim();
+    final qty = int.tryParse(qtyText);
+
+    if (qty == null || qty <= 0) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Product Saved Successfully")),
+        const SnackBar(content: Text("Valid stock quantity required")),
+    );
+    return;
+    }
+
+    PdfService.generatePdf(
+    productName: nameController.text,
+    barcode: barcode,
+    quantity: qty,
     );
   }
 
-  // 🔥 Print PDF
-  void printPdf() async {
-    if (barcode.isEmpty) return;
-
-    await PdfService.generatePdf(
-      productName: nameController.text,
-      barcode: barcode,
-      quantity: int.parse(stockController.text),
-    );
-
-    setState(() {
-      isPrinted = true;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("PDF Generated")),
-    );
+  @override
+  void dispose() {
+    nameController.dispose();
+    purchaseController.dispose();
+    sellingController.dispose();
+    stockController.dispose();
+    super.dispose();
   }
 
   @override
@@ -108,8 +154,7 @@ class _GenerateBarcodeScreenState
                   border: OutlineInputBorder(),
                 ),
               ),
-
-              const SizedBox(height: 15),
+              const SizedBox(height: 12),
 
               TextField(
                 controller: purchaseController,
@@ -119,8 +164,7 @@ class _GenerateBarcodeScreenState
                   border: OutlineInputBorder(),
                 ),
               ),
-
-              const SizedBox(height: 15),
+              const SizedBox(height: 12),
 
               TextField(
                 controller: sellingController,
@@ -130,8 +174,7 @@ class _GenerateBarcodeScreenState
                   border: OutlineInputBorder(),
                 ),
               ),
-
-              const SizedBox(height: 15),
+              const SizedBox(height: 12),
 
               TextField(
                 controller: stockController,
@@ -155,7 +198,6 @@ class _GenerateBarcodeScreenState
               const SizedBox(height: 20),
 
               if (barcode.isNotEmpty) ...[
-
                 Text(
                   "Code: $barcode",
                   style: const TextStyle(
@@ -164,30 +206,7 @@ class _GenerateBarcodeScreenState
                   ),
                 ),
 
-                const SizedBox(height: 20),
-
-                // STATUS
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: isPrinted ? Colors.green : Colors.orange,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    isPrinted ? "PRINTED" : "NOT PRINTED",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                const Text("BARCODE",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-
-                const SizedBox(height: 10),
+                const SizedBox(height: 15),
 
                 BarcodeWidget(
                   barcode: Barcode.code128(),
@@ -196,14 +215,8 @@ class _GenerateBarcodeScreenState
                   height: 80,
                 ),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: 25),
 
-                const Text("QR CODE",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-
-                const SizedBox(height: 10),
-
-                // 🔥 QR FIXED HERE
                 BarcodeWidget(
                   barcode: Barcode.qrCode(),
                   data: qrData,
@@ -211,7 +224,7 @@ class _GenerateBarcodeScreenState
                   height: 200,
                 ),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: 25),
 
                 SizedBox(
                   width: double.infinity,
@@ -226,8 +239,11 @@ class _GenerateBarcodeScreenState
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: printPdf,
-                    child: const Text("PRINT PDF"),
+                    onPressed: printLabel,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                    ),
+                    child: const Text("PRINT BARCODE / QR"),
                   ),
                 ),
               ],

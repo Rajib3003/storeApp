@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'db_helper.dart';
+import 'database/db_helper.dart';
 import 'package:barcode_widget/barcode_widget.dart';
 import 'pdf_service.dart';
 
