@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
 import '../services/product_service.dart';
+import 'product_label_screen.dart';
 
 class StoreListScreen extends StatefulWidget {
   const StoreListScreen({super.key});
@@ -10,42 +10,155 @@ class StoreListScreen extends StatefulWidget {
 }
 
 class _StoreListScreenState extends State<StoreListScreen> {
+
   List<Map<String, dynamic>> products = [];
+
+  final ScrollController scrollController = ScrollController();
+  final TextEditingController searchController = TextEditingController();
+
+  final int limit = 10;
+  int offset = 0;
+
+  bool isLoading = false;
+  bool hasMore = true;
+  String searchText = "";
 
   @override
   void initState() {
     super.initState();
-    loadData();
+    loadProducts();
+
+    scrollController.addListener(() {
+      if (scrollController.position.pixels >=
+          scrollController.position.maxScrollExtent - 200) {
+        loadMore();
+      }
+    });
   }
 
-  void loadData() async {
-    final data = await ProductService.getAllProducts();
+  // 🔥 FIRST LOAD / REFRESH
+  void loadProducts({bool refresh = false}) async {
+
+    if (refresh) {
+      offset = 0;
+      products.clear();
+      hasMore = true;
+    }
+
+    setState(() => isLoading = true);
+
+    final data = await ProductService.getProducts(
+      limit: limit,
+      offset: offset,
+      search: searchText,
+    );
 
     setState(() {
-      products = data;
+      products.addAll(data);
+      offset += limit;
+      isLoading = false;
+
+      if (data.length < limit) {
+        hasMore = false;
+      }
     });
+  }
+
+  // 🔥 LOAD MORE
+  void loadMore() {
+    if (isLoading || !hasMore) return;
+    loadProducts();
+  }
+
+  // 🔥 SEARCH
+  void search(String value) {
+    searchText = value;
+    loadProducts(refresh: true);
+  }
+
+  @override
+  void dispose() {
+    scrollController.dispose();
+    searchController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Store Products")),
-      body: products.isEmpty
-          ? const Center(child: Text("No Products Found"))
-          : ListView.builder(
-              itemCount: products.length,
+
+      body: Column(
+        children: [
+
+          // 🔍 SEARCH BAR
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: TextField(
+              controller: searchController,
+              onChanged: search,
+              decoration: const InputDecoration(
+                hintText: "Search product...",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ),
+
+          // 📦 LIST
+          Expanded(
+            child: ListView.builder(
+              controller: scrollController,
+              itemCount: products.length + 1,
               itemBuilder: (context, index) {
+
+                // 🔄 loader widget
+                if (index == products.length) {
+                  return hasMore
+                      ? const Padding(
+                          padding: EdgeInsets.all(15),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      : const SizedBox();
+                }
+
                 final item = products[index];
 
                 return Card(
                   child: ListTile(
-                    title: Text(item['name'].toString()),
-                    subtitle: Text("Stock: ${item['stock']}"),
-                    trailing: Text("৳${item['selling_price']}"),
+                     title: Text(item['name']),
+  
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("Barcode: ${item['barcode']}"),
+                          Text("Stock: ${item['stock']}"),
+                        ],
+                      ),
+
+                      trailing: Text("৳${item['selling_price']}"),
+
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ProductLabelScreen(
+                            productName: item['name'],
+                            barcode: item['barcode'],
+                            purchasePrice: item['purchase_price'].toString(),
+                            sellingPrice: item['selling_price'].toString(),
+                            stock: item['stock'],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 );
               },
             ),
+          ),
+        ],
+      ),
     );
   }
 }

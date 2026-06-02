@@ -4,6 +4,7 @@ import 'package:barcode_widget/barcode_widget.dart';
 
 import '../services/product_service.dart';
 import '../../../services/pdf_service.dart';
+import 'product_label_screen.dart';
 
 class GenerateBarcodeScreen extends StatefulWidget {
   const GenerateBarcodeScreen({super.key});
@@ -44,48 +45,59 @@ class _GenerateBarcodeScreenState extends State<GenerateBarcodeScreen> {
 ''';
 
   // 🔥 SAVE PRODUCT
-  Future<void> saveProduct() async {
-    print("SAVE CLICKED");
-
-    if (barcode.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please generate barcode first")),
-      );
-      return;
-    }
-
-    if (nameController.text.isEmpty ||
-        purchaseController.text.isEmpty ||
-        sellingController.text.isEmpty ||
-        stockController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Fill all fields first")),
-      );
-      return;
-    }
-
-    try {
-      await ProductService.insertProduct({
-        "name": nameController.text.trim(),
-        "barcode": barcode,
-        "purchase_price": double.tryParse(purchaseController.text) ?? 0,
-        "selling_price": double.tryParse(sellingController.text) ?? 0,
-        "stock": int.tryParse(stockController.text) ?? 0,
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Product Saved Successfully")),
-      );
-
-      // ❗ IMPORTANT: barcode clear করবো না
-      clearFormKeepBarcode();
-
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Save Failed: $e")),
-      );
-    }
+ Future<void> saveProduct() async {
+  if (barcode.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Please generate barcode first")),
+    );
+    return;
   }
+
+  if (nameController.text.isEmpty ||
+      purchaseController.text.isEmpty ||
+      sellingController.text.isEmpty ||
+      stockController.text.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Fill all fields first")),
+    );
+    return;
+  }
+
+  try {
+    await ProductService.insertProduct({
+      "name": nameController.text.trim(),
+      "barcode": barcode,
+      "purchase_price":
+          double.tryParse(purchaseController.text) ?? 0,
+      "selling_price":
+          double.tryParse(sellingController.text) ?? 0,
+      "stock":
+          int.tryParse(stockController.text) ?? 0,
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Product Saved Successfully")),
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProductLabelScreen(
+          productName: nameController.text,
+          barcode: barcode,
+          purchasePrice: purchaseController.text,
+          sellingPrice: sellingController.text,
+          stock: int.parse(stockController.text),
+        ),
+      ),
+    );
+
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Save Failed: $e")),
+    );
+  }
+}
 
   // 🔥 CLEAR ONLY FORM (barcode KEEP)
   void clearFormKeepBarcode() {
@@ -234,18 +246,18 @@ class _GenerateBarcodeScreenState extends State<GenerateBarcodeScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 15),
+                // const SizedBox(height: 15),
 
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: printLabel,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                    ),
-                    child: const Text("PRINT BARCODE / QR"),
-                  ),
-                ),
+                // SizedBox(
+                //   width: double.infinity,
+                //   child: ElevatedButton(
+                //     onPressed: printLabel,
+                //     style: ElevatedButton.styleFrom(
+                //       backgroundColor: Colors.blue,
+                //     ),
+                //     child: const Text("PRINT BARCODE / QR"),
+                //   ),
+                // ),
               ],
             ],
           ),

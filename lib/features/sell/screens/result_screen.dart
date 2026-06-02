@@ -99,7 +99,7 @@ class _ResultScreenState extends State<ResultScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-
+            
             Text("Name: ${product!['name']}"),
             Text("Stock: ${product!['stock']}"),
 
