@@ -70,6 +70,7 @@ class _CartScreenState extends State<CartScreen> {
     );
 
     if (confirm != true) return;
+    if (!mounted) return;
 
     double discount =
         double.tryParse(discountController.text) ?? 0;
@@ -79,19 +80,24 @@ class _CartScreenState extends State<CartScreen> {
 
     double payable = totalAmount - discount;
 
+    final productsByBarcode = <String, Map<String, dynamic>>{};
+
     // 🔥 1. STOCK VALIDATION
     for (var item in CartService.items) {
-      final product =
-          await ProductService.getByBarcode(item.barcode);
+      final product = await ProductService.getByBarcode(item.barcode);
 
       if (product == null) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("${item.name} not found")),
         );
         return;
       }
 
+      productsByBarcode[item.barcode] = product;
+
       if (item.qty > product['stock']) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Not enough stock for ${item.name}"),
@@ -101,14 +107,11 @@ class _CartScreenState extends State<CartScreen> {
       }
     }
 
-    // 🔥 2. PROCESS ORDER (THIS IS YOUR REQUESTED FUNCTION)
+    // 🔥 2. PROCESS ORDER
     for (var item in CartService.items) {
-      final product =
-          await ProductService.getByBarcode(item.barcode);
-
+      final product = productsByBarcode[item.barcode];
       if (product == null) continue;
 
-      // stock update
       int newStock = product['stock'] - item.qty;
 
       await ProductService.updateStock(
@@ -116,7 +119,6 @@ class _CartScreenState extends State<CartScreen> {
         newStock: newStock,
       );
 
-      // 🔥 SAVE SALES HISTORY
       SalesService.addSale(
         SaleModel(
           barcode: item.barcode,
@@ -136,6 +138,7 @@ class _CartScreenState extends State<CartScreen> {
 
     refresh();
 
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(

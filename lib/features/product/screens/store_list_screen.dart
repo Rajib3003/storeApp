@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../services/product_service.dart';
 import 'product_label_screen.dart';
@@ -10,11 +12,11 @@ class StoreListScreen extends StatefulWidget {
 }
 
 class _StoreListScreenState extends State<StoreListScreen> {
-
   List<Map<String, dynamic>> products = [];
 
   final ScrollController scrollController = ScrollController();
   final TextEditingController searchController = TextEditingController();
+  Timer? _searchDebounce;
 
   final int limit = 10;
   int offset = 0;
@@ -71,6 +73,14 @@ class _StoreListScreenState extends State<StoreListScreen> {
   }
 
   // 🔥 SEARCH
+  void _onSearchChanged(String value) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      searchText = value;
+      loadProducts(refresh: true);
+    });
+  }
+
   void search(String value) {
     searchText = value;
     loadProducts(refresh: true);
@@ -78,6 +88,7 @@ class _StoreListScreenState extends State<StoreListScreen> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     scrollController.dispose();
     searchController.dispose();
     super.dispose();
@@ -96,7 +107,7 @@ class _StoreListScreenState extends State<StoreListScreen> {
             padding: const EdgeInsets.all(10),
             child: TextField(
               controller: searchController,
-              onChanged: search,
+              onChanged: _onSearchChanged,
               decoration: const InputDecoration(
                 hintText: "Search product...",
                 prefixIcon: Icon(Icons.search),

@@ -28,6 +28,60 @@ class MyApp extends StatelessWidget {
   }
 }
 
+class HomeMenuButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final Widget page;
+
+  const HomeMenuButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.page,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => page),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            const BoxShadow(
+              color: Color.fromRGBO(0, 0, 0, 0.08),
+              blurRadius: 8,
+              offset: Offset(2, 2),
+            )
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 40),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -95,43 +149,35 @@ class HomePage extends StatelessWidget {
 
           children: [
 
-            _menuButton(
-              context,
+            const HomeMenuButton(
               icon: Icons.qr_code_scanner,
               label: "Scan & Sell",
               color: Colors.green,
-              page: const ScanScreen(),
+              page: ScanScreen(),
             ),
-
-            _menuButton(
-              context,
+            const HomeMenuButton(
               icon: Icons.add_box,
               label: "Add Product",
               color: Colors.blue,
-              page: const GenerateBarcodeScreen(),
+              page: GenerateBarcodeScreen(),
             ),
-
-            _menuButton(
-              context,
+            const HomeMenuButton(
               icon: Icons.list,
               label: "Products",
               color: Colors.orange,
-              page: const StoreListScreen(),
+              page: StoreListScreen(),
             ),
-
-            _menuButton(
-              context,
+            const HomeMenuButton(
               icon: Icons.shopping_cart,
               label: "Cart",
               color: Colors.purple,
-              page: const CartScreen(),
+              page: CartScreen(),
             ),
-            _menuButton(
-              context,
+            const HomeMenuButton(
               icon: Icons.bar_chart,
               label: "Sales Report",
               color: Colors.red,
-              page: const SalesReportScreen(),
+              page: SalesReportScreen(),
             ),
           ],
         ),
@@ -139,47 +185,4 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _menuButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required Color color,
-    required Widget page,
-  }) {
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => page),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 8,
-              offset: const Offset(2, 2),
-            )
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 40),
-            const SizedBox(height: 10),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
 }

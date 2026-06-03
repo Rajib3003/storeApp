@@ -11,19 +11,30 @@ class SalesReportScreen extends StatefulWidget {
 class _SalesReportScreenState extends State<SalesReportScreen> {
   DateTime? fromDate;
   DateTime? toDate;
+  List filteredSales = SalesService.getAllSales();
 
-  List getFilteredSales() {
+  @override
+  void initState() {
+    super.initState();
+    _applyFilter();
+  }
+
+  void _applyFilter() {
     final sales = SalesService.getAllSales();
 
     if (fromDate == null || toDate == null) {
-      return sales;
+      filteredSales = sales;
+    } else {
+      final start = fromDate!.subtract(const Duration(days: 1));
+      final end = toDate!.add(const Duration(days: 1));
+
+      filteredSales = sales.where((item) {
+        final d = item.date;
+        return d.isAfter(start) && d.isBefore(end);
+      }).toList();
     }
 
-    return sales.where((item) {
-      final d = item.date;
-      return d.isAfter(fromDate!.subtract(const Duration(days: 1))) &&
-             d.isBefore(toDate!.add(const Duration(days: 1)));
-    }).toList();
+    setState(() {});
   }
 
   Future<void> pickFromDate() async {
@@ -35,7 +46,8 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
     );
 
     if (picked != null) {
-      setState(() => fromDate = picked);
+      fromDate = picked;
+      _applyFilter();
     }
   }
 
@@ -48,13 +60,14 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
     );
 
     if (picked != null) {
-      setState(() => toDate = picked);
+      toDate = picked;
+      _applyFilter();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final sales = getFilteredSales();
+    final sales = filteredSales;
 
     return Scaffold(
       appBar: AppBar(title: const Text("Sales Report (Date Range)")),
@@ -99,7 +112,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                 const SizedBox(height: 10),
 
                 ElevatedButton(
-                  onPressed: () => setState(() {}),
+                  onPressed: _applyFilter,
                   child: const Text("Apply Filter"),
                 ),
               ],
