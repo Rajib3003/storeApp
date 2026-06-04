@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'sales_service.dart';
+import 'demo_sales_data.dart';
 
 class SalesReportScreen extends StatefulWidget {
   const SalesReportScreen({super.key});
@@ -11,26 +12,35 @@ class SalesReportScreen extends StatefulWidget {
 class _SalesReportScreenState extends State<SalesReportScreen> {
   DateTime? fromDate;
   DateTime? toDate;
-  List filteredSales = SalesService.getAllSales();
+
+  List allSales = [];
+  List filteredSales = [];
 
   @override
   void initState() {
     super.initState();
-    _applyFilter();
+    insertDateWiseDemoSales();
+    _loadSales();
   }
 
+  // 🚀 LOAD DATA ONCE (FAST)
+  Future<void> _loadSales() async {
+    allSales = SalesService.getAllSales();
+
+    filteredSales = allSales;
+    setState(() {});
+  }
+
+  // 🚀 FILTER
   void _applyFilter() {
-    final sales = SalesService.getAllSales();
-
     if (fromDate == null || toDate == null) {
-      filteredSales = sales;
+      filteredSales = allSales;
     } else {
-      final start = fromDate!.subtract(const Duration(days: 1));
-      final end = toDate!.add(const Duration(days: 1));
+      final start = DateTime(fromDate!.year, fromDate!.month, fromDate!.day);
+      final end = DateTime(toDate!.year, toDate!.month, toDate!.day, 23, 59, 59);
 
-      filteredSales = sales.where((item) {
-        final d = item.date;
-        return d.isAfter(start) && d.isBefore(end);
+      filteredSales = allSales.where((item) {
+        return item.date.isAfter(start) && item.date.isBefore(end);
       }).toList();
     }
 
@@ -70,17 +80,18 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
     final sales = filteredSales;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Sales Report (Date Range)")),
+      appBar: AppBar(
+        title: const Text("Sales Report"),
+      ),
 
       body: Column(
         children: [
 
-          // 🔥 DATE FILTER SECTION
+          // 📅 FILTER SECTION
           Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
               children: [
-
                 Row(
                   children: [
                     Expanded(
@@ -93,9 +104,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                         ),
                       ),
                     ),
-
                     const SizedBox(width: 10),
-
                     Expanded(
                       child: ElevatedButton(
                         onPressed: pickToDate,
@@ -119,11 +128,11 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
             ),
           ),
 
-          // 🔥 TOTAL
+          // 💰 TOTAL SALES
           Padding(
             padding: const EdgeInsets.all(12),
             child: Text(
-             "Total Sales: ৳${sales.fold(0.0, (a, b) => a + b.total).toStringAsFixed(2)}",
+              "Total Sales: ৳${sales.fold<double>(0.0, (a, b) => a + b.total).toStringAsFixed(2)}",
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -131,7 +140,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
             ),
           ),
 
-          // 🔥 LIST
+          // 📦 LIST
           Expanded(
             child: sales.isEmpty
                 ? const Center(child: Text("No Data Found"))
@@ -144,10 +153,10 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                         child: ListTile(
                           title: Text(item.name),
                           subtitle: Text(
-                            "Qty: ${item.qty} | Price: ৳${item.sellingPrice.toStringAsFixed(2)}",
+                            "Qty: ${item.qty} | Price: ৳${item.sellingPrice}",
                           ),
                           trailing: Text(
-                            "৳${item.total.toStringAsFixed(2)}",
+                            "৳${item.total}",
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                             ),
