@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import '../services/product_service.dart';
+import 'product_service.dart';
 import 'product_label_screen.dart';
 
 class StoreListScreen extends StatefulWidget {

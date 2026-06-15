@@ -1,19 +1,21 @@
+import '../../db/db_helper.dart';
 import 'sale_model.dart';
 
 class SalesService {
-  static List<SaleModel> sales = [];
+  static Future<void> addSale(SaleModel sale) async {
+    final db = await DBHelper.db;
 
-  static void addSale(SaleModel sale) {
-    sales.add(sale);
+    await db.insert('sales', sale.toMap());
   }
 
-  static List<SaleModel> getAllSales() {
-    return sales;
+  static Future<List<SaleModel>> getSales() async {
+    final db = await DBHelper.db;
+
+    final result = await db.query(
+      'sales',
+      orderBy: 'createdAt DESC',
+    );
+
+    return result.map((e) => SaleModel.fromMap(e)).toList();
   }
-
-  static double get totalSales =>
-      sales.fold(0, (sum, item) => sum + item.total);
-
-  static int get totalItems =>
-      sales.fold(0, (sum, item) => sum + item.qty);
 }

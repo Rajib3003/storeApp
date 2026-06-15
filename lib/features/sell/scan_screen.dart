@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-import '../../product/services/product_service.dart';
+import '../product/product_service.dart';
 import 'sell_screen.dart';
 
 class ScanScreen extends StatefulWidget {

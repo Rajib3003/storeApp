@@ -21,7 +21,7 @@ class CartService {
       cart.add(item);
     }
 
-    _updateCount();
+   _updateCount();
   }
 
   // ➖ DECREASE

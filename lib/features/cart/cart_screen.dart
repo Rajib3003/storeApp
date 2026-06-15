@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'cart_service.dart';
 import 'cart_item_model.dart';
-import '../product/services/product_service.dart';
+import '../product/product_service.dart';
 import '../sales/sales_service.dart';
 import '../sales/sale_model.dart';
+import '../product/store_list_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -129,9 +130,24 @@ class _CartScreenState extends State<CartScreen> {
           sellingPrice: item.price,
           total: item.total,
           date: DateTime.now(),
+          createdAt: DateTime.now().toIso8601String(),
         ),
       );
     }
+
+    // 🔥 3. CLEAR CART
+    // CartService.clear();
+
+    // refresh();
+
+    // if (!mounted) return;
+    // ScaffoldMessenger.of(context).showSnackBar(
+    //   SnackBar(
+    //     content: Text(
+    //       "Checkout Done | Paid: ৳${payable.toStringAsFixed(2)}",
+    //     ),
+    //   ),
+    //  );
 
     // 🔥 3. CLEAR CART
     CartService.clear();
@@ -139,6 +155,7 @@ class _CartScreenState extends State<CartScreen> {
     refresh();
 
     if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -146,6 +163,14 @@ class _CartScreenState extends State<CartScreen> {
         ),
       ),
     );
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const StoreListScreen(),
+      ),
+    );
+   
   }
 
   @override

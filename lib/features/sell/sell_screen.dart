@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../product/services/product_service.dart';
-import '../../cart/cart_service.dart';
-import '../../cart/cart_item_model.dart';
+import '../cart/cart_service.dart';
+import '../cart/cart_item_model.dart';
 
 class SellScreen extends StatefulWidget {
   final Map<String, dynamic> product;

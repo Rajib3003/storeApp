@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:barcode_widget/barcode_widget.dart';
 
-import '../../../services/pdf_service.dart';
+import '../../services/pdf_service.dart';
 import 'generate_barcode_screen.dart';
 import 'store_list_screen.dart';
-import '../../../main.dart'; // 👈 HomePage এখান থেকে আসবে
+import '../../main.dart'; // 👈 HomePage এখান থেকে আসবে
+import 'package:myapp/features/sell/sell_screen.dart';
+import '../cart/widgets/cart_icon.dart';
 
 class ProductLabelScreen extends StatelessWidget {
   final String productName;
@@ -56,6 +58,7 @@ class ProductLabelScreen extends StatelessWidget {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -83,6 +86,7 @@ class ProductLabelScreen extends StatelessWidget {
             icon: const Icon(Icons.list),
             onPressed: () => goProductList(context),
           ),
+          CartIcon(),
         ],
       ),
 
@@ -144,6 +148,33 @@ class ProductLabelScreen extends StatelessWidget {
                 onPressed: () => printLabels(context),
                 icon: const Icon(Icons.print),
                 label: Text("PRINT $stock LABELS"),
+              ),
+            ),
+
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => SellScreen(
+                        product: {
+                          "barcode": barcode,
+                          "name": productName,
+                          "stock": stock,
+                          "selling_price": sellingPrice,
+                        },
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.shopping_cart),
+                label: const Text("SELL THIS PRODUCT"),
               ),
             ),
           ],

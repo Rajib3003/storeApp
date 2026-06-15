@@ -1,4 +1,4 @@
-import '../../../core/db/db_helper.dart';
+import '../../db/db_helper.dart';
 
 class ProductService {
 

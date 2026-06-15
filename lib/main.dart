@@ -1,25 +1,21 @@
 import 'package:flutter/material.dart';
 
-import 'features/sell/screens/scan_screen.dart';
-import 'features/product/screens/generate_barcode_screen.dart';
-import 'features/product/screens/store_list_screen.dart';
+import 'features/sell/scan_screen.dart';
+import 'features/product/generate_barcode_screen.dart';
+import 'features/product/store_list_screen.dart';
 import 'features/cart/cart_screen.dart';
-import 'features/cart/cart_service.dart';
 import 'features/sales/sales_report_screen.dart';
 import 'features/splash/splash_screen.dart';
-import 'package:flutter/widgets.dart';
+import 'features/cart/widgets/cart_icon.dart';
+import 'features/reports/report_screen.dart';
+import 'features/backup/backup_checker.dart';
 
-
-// void main() {
-//   runApp(const MyApp());
-// }
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   runApp(const MyApp());
 }
 
-
+/// ================= APP ROOT =================
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -32,12 +28,86 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      // home: const HomePage(),
       home: const SplashScreen(),
     );
   }
 }
 
+/// ================= HOME PAGE =================
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      BackupChecker.check(context);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Store Dashboard"),
+        centerTitle: true,
+        actions: const [
+          CartIcon(),
+        ],
+      ),
+
+      body: Padding(
+        padding: const EdgeInsets.all(12),
+        child: GridView.count(
+          crossAxisCount: 2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          children: [
+            const HomeMenuButton(
+              icon: Icons.qr_code_scanner,
+              label: "Scan & Sell",
+              color: Colors.green,
+              page: ScanScreen(),
+            ),
+            const HomeMenuButton(
+              icon: Icons.add_box,
+              label: "Add Product",
+              color: Colors.blue,
+              page: GenerateBarcodeScreen(),
+            ),
+            const HomeMenuButton(
+              icon: Icons.list,
+              label: "Products",
+              color: Colors.orange,
+              page: StoreListScreen(),
+            ),
+            const HomeMenuButton(
+              icon: Icons.shopping_cart,
+              label: "Cart",
+              color: Colors.purple,
+              page: CartScreen(),
+            ),
+            HomeMenuButton(
+              icon: Icons.bar_chart,
+              label: "Reports",
+              color: Colors.red,
+              page: ReportsScreen(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// ================= MENU BUTTON =================
 class HomeMenuButton extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -65,8 +135,8 @@ class HomeMenuButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            const BoxShadow(
+          boxShadow: const [
+            BoxShadow(
               color: Color.fromRGBO(0, 0, 0, 0.08),
               blurRadius: 8,
               offset: Offset(2, 2),
@@ -90,109 +160,4 @@ class HomeMenuButton extends StatelessWidget {
       ),
     );
   }
-}
-
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Store Dashboard"),
-        centerTitle: true,
-
-        // 🛒 CART ICON WITH LIVE BADGE
-        actions: [
-          ValueListenableBuilder(
-            valueListenable: CartService.cartCount,
-            builder: (context, value, child) {
-              return Stack(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.shopping_cart),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const CartScreen(),
-                        ),
-                      );
-                    },
-                  ),
-
-                  // 🔴 BADGE
-                  if (value > 0)
-                    Positioned(
-                      right: 6,
-                      top: 6,
-                      child: Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          value.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-
-      body: Padding(
-        padding: const EdgeInsets.all(12),
-
-        child: GridView.count(
-          crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-
-          children: [
-
-            const HomeMenuButton(
-              icon: Icons.qr_code_scanner,
-              label: "Scan & Sell",
-              color: Colors.green,
-              page: ScanScreen(),
-            ),
-            const HomeMenuButton(
-              icon: Icons.add_box,
-              label: "Add Product",
-              color: Colors.blue,
-              page: GenerateBarcodeScreen(),
-            ),
-            const HomeMenuButton(
-              icon: Icons.list,
-              label: "Products",
-              color: Colors.orange,
-              page: StoreListScreen(),
-            ),
-            const HomeMenuButton(
-              icon: Icons.shopping_cart,
-              label: "Cart",
-              color: Colors.purple,
-              page: CartScreen(),
-            ),
-            const HomeMenuButton(
-              icon: Icons.bar_chart,
-              label: "Sales Report",
-              color: Colors.red,
-              page: SalesReportScreen(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
 }

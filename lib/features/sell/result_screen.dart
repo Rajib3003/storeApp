@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/sell_service.dart';
+import 'sell_service.dart';
 
 class ResultScreen extends StatefulWidget {
   final String barcode;

@@ -2,9 +2,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:barcode_widget/barcode_widget.dart';
 
-import '../services/product_service.dart';
-import '../../../services/pdf_service.dart';
+import 'product_service.dart';
+import '../../services/pdf_service.dart';
 import 'product_label_screen.dart';
+
 
 class GenerateBarcodeScreen extends StatefulWidget {
   const GenerateBarcodeScreen({super.key});
@@ -74,7 +75,7 @@ class _GenerateBarcodeScreenState extends State<GenerateBarcodeScreen> {
       "stock":
           int.tryParse(stockController.text) ?? 0,
     });
-
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Product Saved Successfully")),
     );
@@ -87,12 +88,14 @@ class _GenerateBarcodeScreenState extends State<GenerateBarcodeScreen> {
           barcode: barcode,
           purchasePrice: purchaseController.text,
           sellingPrice: sellingController.text,
-          stock: int.parse(stockController.text),
+            stock: int.tryParse(stockController.text) ?? 0,
         ),
       ),
     );
 
   } catch (e) {
+    if (!context.mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("Save Failed: $e")),
     );

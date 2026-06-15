@@ -1,5 +1,4 @@
-import '../../../db/db_helper.dart';
-
+import 'package:myapp/db/db_helper.dart';
 class SellService {
 
   static Future<Map<String, dynamic>?> getProductByBarcode(String barcode) async {
