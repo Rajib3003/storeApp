@@ -10,6 +10,7 @@ import 'features/cart/widgets/cart_icon.dart';
 import 'features/reports/report_screen.dart';
 import 'features/backup/backup_checker.dart';
 import 'features/auth/login_screen.dart';
+import 'features/backup/backup_popup_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,6 +52,7 @@ class _HomePageState extends State<HomePage> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       BackupChecker.check(context);
+      BackupPopupService.checkAndShow(context);
     });
   }
 

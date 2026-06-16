@@ -4,52 +4,44 @@ import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:http/http.dart' as http;
 
 class DriveService {
-  static drive.DriveApi? _driveApi;
+  static drive.DriveApi? _api;
 
   static Future<void> initDrive(GoogleSignInAccount user) async {
     final headers = await user.authHeaders;
     final client = GoogleAuthClient(headers);
-
-    _driveApi = drive.DriveApi(client);
+    _api = drive.DriveApi(client);
   }
 
-  /// UPLOAD (REPLACE OLD FILE)
   static Future<void> uploadFile(File file) async {
-    if (_driveApi == null) throw Exception("Drive not initialized");
+    if (_api == null) return;
+
+    const fileName = "store.db";
 
     final media = drive.Media(file.openRead(), file.lengthSync());
 
     final driveFile = drive.File()
-      ..name = "store.db"
+      ..name = fileName
       ..parents = ["appDataFolder"];
 
-    await _driveApi!.files.create(
-      driveFile,
-      uploadMedia: media,
-    );
+    await _api!.files.create(driveFile, uploadMedia: media);
   }
 
-  /// LIST FILES
   static Future<List<drive.File>> listFiles() async {
-    final res = await _driveApi!.files.list(
+    final res = await _api!.files.list(
       spaces: "appDataFolder",
+      orderBy: "createdTime desc",
       $fields: "files(id,name,createdTime)",
     );
-
     return res.files ?? [];
   }
 
-  /// DOWNLOAD
-  static Future<File?> download(
-    String fileId,
-    String savePath,
-  ) async {
-    final media = await _driveApi!.files.get(
-      fileId,
+  static Future<File?> download(String id, String path) async {
+    final media = await _api!.files.get(
+      id,
       downloadOptions: drive.DownloadOptions.fullMedia,
     ) as drive.Media;
 
-    final file = File(savePath);
+    final file = File(path);
     final sink = file.openWrite();
 
     await media.stream.pipe(sink);
@@ -59,7 +51,6 @@ class DriveService {
   }
 }
 
-/// HTTP CLIENT
 class GoogleAuthClient extends http.BaseClient {
   final Map<String, String> _headers;
   final http.Client _client = http.Client();

@@ -6,63 +6,29 @@ import 'google_auth_service.dart';
 import 'drive_service.dart';
 
 class BackupService {
-  /// ================= GET DB FILE =================
   static Future<File> _getDbFile() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'store.db');
-
-    return File(path);
+    return File(join(dbPath, 'store.db'));
   }
 
-  /// ================= CREATE SAFE COPY =================
-  static Future<File?> _createBackupCopy() async {
-    try {
-      final dbFile = await _getDbFile();
+  static Future<File?> backupLocal() async {
+    final db = await _getDbFile();
 
-      if (!await dbFile.exists()) {
-        throw Exception("Database not found");
-      }
+    if (!await db.exists()) return null;
 
-      final backupPath = join(
-        dbFile.parent.path,
-        'backup_store.db',
-      );
+    final backupPath = join(db.parent.path, 'backup_store.db');
 
-      return await dbFile.copy(backupPath);
-    } catch (e) {
-      print("Local backup failed: $e");
-      return null;
-    }
+    return await db.copy(backupPath);
   }
 
-  /// ================= MAIN BACKUP =================
   static Future<void> backup() async {
-    try {
-      // Step 1: Create local copy
-      final backupFile = await _createBackupCopy();
+    final db = await backupLocal();
+    if (db == null) return;
 
-      if (backupFile == null) {
-        throw Exception("Backup file not created");
-      }
+    final user = await GoogleAuthService.signIn();
+    if (user == null) return;
 
-      // Step 2: Check existing login (IMPORTANT FIX)
-      final user = GoogleAuthService.currentUser;
-
-      // If not logged in, only do local backup
-      if (user == null) {
-        print("User not logged in, local backup only");
-        return;
-      }
-
-      // Step 3: Init Drive (only once)
-      await DriveService.initDrive(user);
-
-      // Step 4: Upload to Google Drive
-      await DriveService.uploadFile(backupFile);
-
-      print("✅ Google Drive backup completed");
-    } catch (e) {
-      print("❌ Backup failed: $e");
-    }
+    await DriveService.initDrive(user);
+    await DriveService.uploadFile(db);
   }
 }
