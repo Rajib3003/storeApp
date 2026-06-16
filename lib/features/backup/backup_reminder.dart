@@ -12,7 +12,8 @@ class BackupReminder {
 
     final lastDate = DateTime.parse(last);
 
-    return DateTime.now().difference(lastDate).inDays >= 3;
+    // return DateTime.now().difference(lastDate).inDays >= 3;
+    return DateTime.now().difference(lastDate).inMinutes >= 5;
   }
 
   static Future<void> saveBackupDate() async {

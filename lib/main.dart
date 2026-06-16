@@ -9,6 +9,7 @@ import 'features/splash/splash_screen.dart';
 import 'features/cart/widgets/cart_icon.dart';
 import 'features/reports/report_screen.dart';
 import 'features/backup/backup_checker.dart';
+import 'features/auth/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +29,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      home: const SplashScreen(),
+      // home: const SplashScreen(),
+      home: const LoginScreen(),
     );
   }
 }
