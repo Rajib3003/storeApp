@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../auth/login_screen.dart';
+import '../home/home_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -32,12 +35,23 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
 
     // ⏳ navigate after animation
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomePage()),
-      );
-    });
+  Future.delayed(const Duration(seconds: 2), () async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final googleLoggedIn =
+        prefs.getBool("google_logged_in") ?? false;
+
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => googleLoggedIn
+            ? HomePage()
+            : const LoginScreen(),
+      ),
+    );
+  });
   }
 
   @override

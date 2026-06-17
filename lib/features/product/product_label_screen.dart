@@ -7,6 +7,7 @@ import 'store_list_screen.dart';
 import '../../main.dart'; // 👈 HomePage এখান থেকে আসবে
 import 'package:myapp/features/sell/sell_screen.dart';
 import '../cart/widgets/cart_icon.dart';
+import '../home/home_page.dart';
 
 class ProductLabelScreen extends StatelessWidget {
   final String productName;
@@ -35,7 +36,7 @@ class ProductLabelScreen extends StatelessWidget {
   void goHome(BuildContext context) {
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (_) => const HomePage()),
+      MaterialPageRoute(builder: (_) => HomePage()),
       (route) => false,
     );
   }

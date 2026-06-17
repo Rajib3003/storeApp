@@ -20,7 +20,7 @@ class BackupChecker {
         actions: [
           TextButton(
             onPressed: () async {
-              await BackupService.backup();
+              await BackupService.backupToDrive();
               await BackupReminder.saveBackupDate();
 
               if (context.mounted) {
