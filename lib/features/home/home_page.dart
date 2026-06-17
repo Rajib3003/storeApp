@@ -12,6 +12,7 @@ import '../backup/backup_service.dart';
 import '../backup/backup_checker.dart';
 import '../backup/backup_popup_service.dart';
 import '../backup/backup_list_screen.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,16 +23,20 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
 
-  @override
-  void initState() {
-    super.initState();
+@override
+void initState() {
+  super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   BackupChecker.check(context);
-    //   BackupPopupService.checkAndShow(context);
-    });
+  initDrive();
+}
+
+Future<void> initDrive() async {
+  final user = await GoogleSignIn().signInSilently();
+
+  if (user != null) {
+    await DriveService.initDrive(user);
   }
-
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
