@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:intl/intl.dart';
 import 'backup_detail_screen.dart';
+import '../auth/login_screen.dart';
 
 import 'drive_service.dart';
 
@@ -24,25 +25,46 @@ class _BackupListScreenState extends State<BackupListScreen> {
 
   // ---------------- LOAD FILES ----------------
   Future<void> loadFiles() async {
-    try {
-      final result = await DriveService.listFiles();
+  try {
+    // Drive initialized কিনা check করো
+    bool ok = await DriveService.tryAutoInit();
 
-      // latest first
-      result.sort((a, b) {
-        final aTime = a.createdTime ?? DateTime(1970);
-        final bTime = b.createdTime ?? DateTime(1970);
-        return bTime.compareTo(aTime);
-      });
+    // user না থাকলে LoginScreen এ পাঠাও
+    if (!ok) {
+      if (!mounted) return;
 
-      setState(() {
-        files = result;
-        loading = false;
-      });
-    } catch (e) {
-      setState(() => loading = false);
-      debugPrint("Load error: $e");
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const LoginScreen(),
+        ),
+      );
+
+      return;
     }
+
+    final result = await DriveService.listFiles();
+
+    // latest first
+    result.sort((a, b) {
+      final aTime = a.createdTime ?? DateTime(1970);
+      final bTime = b.createdTime ?? DateTime(1970);
+
+      return bTime.compareTo(aTime);
+    });
+
+    setState(() {
+      files = result;
+      loading = false;
+    });
+  } catch (e) {
+    setState(() {
+      loading = false;
+    });
+
+    debugPrint("Load error: $e");
   }
+}
 
   // ---------------- FORMAT BD TIME ----------------
   String formatBDTime(DateTime? time) {
@@ -100,7 +122,30 @@ class _BackupListScreenState extends State<BackupListScreen> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               )
-                            : null,
+                            : IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () async {
+
+                                if (files.length <= 1) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("At least one backup must remain"),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                await DriveService.deleteFile(f.id!);
+
+                                await loadFiles();
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Backup deleted"),
+                                  ),
+                                );
+                              },
+                            ),
                             onTap: () {
                                 Navigator.push(
                                     context,

@@ -1,12 +1,11 @@
 import 'dart:io';
-
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:http/http.dart' as http;
-import 'package:google_sign_in/google_sign_in.dart';
 
 class DriveService {
   static drive.DriveApi? _api;
+  static GoogleSignInAccount? _user;
 
   static final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: [
@@ -14,34 +13,43 @@ class DriveService {
     ],
   );
 
-  // ---------------- INIT DRIVE ----------------
+  // ---------------- AUTO INIT ----------------
+  static Future<bool> tryAutoInit() async {
+    try {
+      final user = await _googleSignIn.signInSilently();
+
+      if (user == null) {
+        print("Google user not found");
+        return false;
+      }
+
+      _user = user;
+
+      final headers = await user.authHeaders;
+      final client = GoogleAuthClient(headers);
+
+      _api = drive.DriveApi(client);
+
+      print("Drive initialized");
+      return true;
+    } catch (e) {
+      print("Drive init error: $e");
+      return false;
+    }
+  }
+
+  // ---------------- MANUAL INIT ----------------
   static Future<void> initDrive(GoogleSignInAccount user) async {
     final headers = await user.authHeaders;
     final client = GoogleAuthClient(headers);
 
     _api = drive.DriveApi(client);
+    _user = user;
   }
 
-  // ---------------- AUTO INIT ----------------
-  static Future<void> ensureInitialized() async {
-    if (_api != null) return;
-
-    GoogleSignInAccount? user =
-        await _googleSignIn.signInSilently();
-
-    user ??= await _googleSignIn.signInSilently();
-
-    if (user != null) {
-      await initDrive(user);
-      print("Drive initialized");
-    } else {
-      print("Google user not found");
-    }
-  }
-
-  // ---------------- UPLOAD ----------------
+  // ---------------- UPLOAD FILE ----------------
   static Future<void> uploadFile(File file) async {
-    await ensureInitialized();
+    await tryAutoInit();
 
     if (_api == null) {
       throw Exception("Drive not initialized");
@@ -64,7 +72,7 @@ class DriveService {
 
   // ---------------- LIST FILES ----------------
   static Future<List<drive.File>> listFiles() async {
-    await ensureInitialized();
+    await tryAutoInit();
 
     if (_api == null) {
       print("Drive not initialized");
@@ -79,16 +87,15 @@ class DriveService {
     return result.files ?? [];
   }
 
-  // ---------------- DOWNLOAD ----------------
+  // ---------------- DOWNLOAD FILE ----------------
   static Future<File> download(String fileId) async {
-    await ensureInitialized();
+    await tryAutoInit();
 
     if (_api == null) {
       throw Exception("Drive not initialized");
     }
 
-    final downloadDir =
-        Directory("/storage/emulated/0/Download");
+    final downloadDir = Directory("/storage/emulated/0/Download");
 
     if (!await downloadDir.exists()) {
       await downloadDir.create(recursive: true);
@@ -114,21 +121,27 @@ class DriveService {
 
     return file;
   }
-}
 
+  // ---------------- DELETE FILE ----------------
+  static Future<void> deleteFile(String fileId) async {
+    await tryAutoInit();
+
+    if (_api == null) {
+      throw Exception("Drive not initialized");
+    }
+
+    await _api!.files.delete(fileId);
+  }
+}
 class GoogleAuthClient extends http.BaseClient {
   final Map<String, String> _headers;
-
   final http.Client _client = http.Client();
 
   GoogleAuthClient(this._headers);
 
   @override
-  Future<http.StreamedResponse> send(
-    http.BaseRequest request,
-  ) {
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
     request.headers.addAll(_headers);
-
     return _client.send(request);
   }
 }

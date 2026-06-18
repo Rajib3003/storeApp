@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../auth/login_screen.dart';
 import '../home/home_page.dart';
+import '../backup/drive_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -13,7 +14,6 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -21,7 +21,6 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
-    // 🎬 animation controller
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
@@ -34,24 +33,38 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    // ⏳ navigate after animation
-  Future.delayed(const Duration(seconds: 2), () async {
-    final prefs = await SharedPreferences.getInstance();
+    _goNext();
+  }
 
-    final googleLoggedIn =
-        prefs.getBool("google_logged_in") ?? false;
+  Future<void> _goNext() async {
+    final prefs = await SharedPreferences.getInstance();
+    final loggedIn = prefs.getBool("google_logged_in") ?? false;
+
+    bool driveReady = false;
+
+    if (loggedIn) {
+      try {
+        driveReady = await DriveService.tryAutoInit();
+      } catch (_) {
+        driveReady = false;
+      }
+    }
+
+    await Future.delayed(const Duration(seconds: 2));
 
     if (!mounted) return;
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => googleLoggedIn
-            ? HomePage()
-            : const LoginScreen(),
-      ),
-    );
-  });
+    if (loggedIn && driveReady) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    }
   }
 
   @override
@@ -63,20 +76,16 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green, // 🟢 green background
+      backgroundColor: Colors.green,
       body: Center(
         child: FadeTransition(
           opacity: _animation,
           child: ScaleTransition(
             scale: _animation,
-            child: Column(
+            child: const Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(
-                  Icons.store,
-                  size: 100,
-                  color: Colors.white,
-                ),
+              children: [
+                Icon(Icons.store, size: 100, color: Colors.white),
                 SizedBox(height: 10),
                 Text(
                   "Smart Shop",

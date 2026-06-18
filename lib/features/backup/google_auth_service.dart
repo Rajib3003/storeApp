@@ -1,18 +1,24 @@
 import 'package:google_sign_in/google_sign_in.dart';
 
 class GoogleAuthService {
-  static final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: [
-      'email',
-      'https://www.googleapis.com/auth/drive.file',
-    ],
-  );
+ static final GoogleSignIn _googleSignIn = GoogleSignIn(
+  scopes: [
+    'email',
+    'profile',
+    'https://www.googleapis.com/auth/drive.file',
+  ],
+  serverClientId: null,
+);
 
-  // ✅ THIS IS YOUR CODE (place here)
   static Future<GoogleSignInAccount?> signIn() async {
     try {
-      return await _googleSignIn.signIn();
+      final user = await _googleSignIn.signIn();
+
+      print("USER: $user");
+
+      return user;
     } catch (e) {
+      print("SIGNIN ERROR: $e");
       return null;
     }
   }
@@ -22,10 +28,6 @@ class GoogleAuthService {
   }
 
   static Future<GoogleSignInAccount?> signInSilently() async {
-    try {
-      return await _googleSignIn.signInSilently();
-    } catch (e) {
-      return null;
-    }
+    return await _googleSignIn.signInSilently();
   }
 }

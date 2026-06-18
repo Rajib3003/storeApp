@@ -6,13 +6,12 @@ import '../product/store_list_screen.dart';
 import '../cart/cart_screen.dart';
 import '../reports/report_screen.dart';
 import '../backup/drive_service.dart';
-
-import '../cart/widgets/cart_icon.dart';
 import '../backup/backup_service.dart';
-import '../backup/backup_checker.dart';
-import '../backup/backup_popup_service.dart';
 import '../backup/backup_list_screen.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import '../backup/google_auth_service.dart';
+import '../auth/login_screen.dart';
+import 'settings_screen.dart';
+import '../cart/widgets/cart_icon.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,20 +22,21 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
 
-@override
-void initState() {
-  super.initState();
+  @override
+  void initState() {
+    super.initState();
 
-  initDrive();
-}
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final ok = await DriveService.tryAutoInit();
 
-Future<void> initDrive() async {
-  final user = await GoogleSignIn().signInSilently();
-
-  if (user != null) {
-    await DriveService.initDrive(user);
+      if (!ok) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
+    });
   }
-}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,28 +44,107 @@ Future<void> initDrive() async {
         title: const Text("Store Dashboard"),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.cloud_upload),
-            onPressed: () async {
-              await BackupService.backupToDrive();
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Backup Completed")),
-              );
-            },
-          ),
           const CartIcon(),
-          IconButton(
-            icon: const Icon(Icons.list),
-            onPressed: () {
-                Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const BackupListScreen(),
-                ),
-                );
+          PopupMenuButton<HomeMenuAction>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (action) async {
+              switch (action) {
+                case HomeMenuAction.settings:
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SettingsScreen(),
+                    ),
+                  );
+                  break;
+                case HomeMenuAction.backupList:
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const BackupListScreen(),
+                    ),
+                  );
+                  break;
+                case HomeMenuAction.backupNow:
+                  setState(() {});
+                  try {
+                    await BackupService.backupToDrive();
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Backup completed')),
+                    );
+                  } catch (e) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Backup failed: $e')),
+                    );
+                  }
+                  break;
+                case HomeMenuAction.userInfo:
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SettingsScreen(),
+                    ),
+                  );
+                  break;
+                case HomeMenuAction.logout:
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Confirm Logout'),
+                      content: const Text('Do you want to sign out now?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('Logout'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirmed != true) return;
+
+                  await GoogleAuthService.signOut();
+
+                  if (!mounted) return;
+
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    (route) => false,
+                  );
+                  break;
+              }
             },
-            ),
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: HomeMenuAction.settings,
+                child: Text('Settings'),
+              ),
+              PopupMenuItem(
+                value: HomeMenuAction.backupList,
+                child: Text('Backup List'),
+              ),
+              PopupMenuItem(
+                value: HomeMenuAction.backupNow,
+                child: Text('Backup Now'),
+              ),
+              PopupMenuItem(
+                value: HomeMenuAction.userInfo,
+                child: Text('User Information'),
+              ),
+              PopupMenuDivider(),
+              PopupMenuItem(
+                value: HomeMenuAction.logout,
+                child: Text('Logout'),
+              ),
+            ],
+          ),
         ],
       ),
 
@@ -111,6 +190,14 @@ Future<void> initDrive() async {
       ),
     );
   }
+}
+
+enum HomeMenuAction {
+  settings,
+  backupList,
+  backupNow,
+  userInfo,
+  logout,
 }
 
 class HomeMenuButton extends StatelessWidget {
