@@ -1,100 +1,113 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
-import 'sales_service.dart';
-import 'sale_model.dart';
+import 'package:myapp/features/reports/report_repository.dart';
 
 class SalesReportScreen extends StatefulWidget {
   const SalesReportScreen({super.key});
 
   @override
-  State<SalesReportScreen> createState() =>
-      _SalesReportScreenState();
+  State<SalesReportScreen> createState() => _SalesReportScreenState();
 }
 
-class _SalesReportScreenState
-    extends State<SalesReportScreen> {
-  late Future<List<SaleModel>> salesFuture;
+class _SalesReportScreenState extends State<SalesReportScreen> {
+  late Future<List<Map<String, dynamic>>> _dataFuture;
 
   @override
   void initState() {
     super.initState();
-    salesFuture = SalesService.getSales();
+    _dataFuture = _loadData();
+  }
+
+  Future<List<Map<String, dynamic>>> _loadData() async {
+    final items = await ReportRepository.getSaleItems();
+    if (items.isNotEmpty) return items;
+    return await ReportRepository.getLegacySales();
+  }
+
+  String _fmtDate(dynamic value) {
+    try {
+      if (value == null) return '';
+      final dt = DateTime.parse(value.toString());
+      return DateFormat('dd MMM yyyy - hh:mm a').format(dt);
+    } catch (_) {
+      return value.toString();
+    }
+  }
+
+  double _toDouble(dynamic v) {
+    if (v == null) return 0;
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString()) ?? 0;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Sales Report"),
-      ),
-      body: FutureBuilder<List<SaleModel>>(
-        future: salesFuture,
+      appBar: AppBar(title: const Text('Sales Report')),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _dataFuture,
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
           }
 
-          final sales = snapshot.data!;
-
-          if (sales.isEmpty) {
-            return const Center(
-              child: Text("No Sales Found"),
-            );
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          double grandTotal = 0;
+          final rows = snapshot.data ?? [];
 
-          for (var sale in sales) {
-            grandTotal += sale.total;
+          if (rows.isEmpty) {
+            return const Center(child: Text('No sales data found'));
           }
+
+          final grandTotal = rows.fold<double>(0, (sum, r) => sum + _toDouble(r['total']));
 
           return Column(
             children: [
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
-                color: Colors.green.shade100,
+                margin: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 child: Text(
-                  "Total Sales: ৳${grandTotal.toStringAsFixed(2)}",
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  'Total Sales: ৳${grandTotal.toStringAsFixed(2)}',
+                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
 
               Expanded(
                 child: ListView.builder(
-                  itemCount: sales.length,
+                  itemCount: rows.length,
                   itemBuilder: (context, index) {
-                    final sale = sales[index];
+                    final r = rows[index];
+                    final name = r['product_name'] ?? r['barcode'] ?? 'Unknown';
+                    final qty = r['qty'] ?? 0;
+                    final sell = _toDouble(r['sell_price'] ?? r['selling_price'] ?? r['sellPrice']);
+                    final total = _toDouble(r['total']);
+                    final profit = _toDouble(r['profit']);
+                    final date = _fmtDate(r['sale_date'] ?? r['created_at']);
 
                     return Card(
-                      margin: const EdgeInsets.all(8),
+                      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                       child: ListTile(
-                        title: Text(sale.name),
+                        title: Text(name.toString()),
                         subtitle: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              "Qty: ${sale.qty}",
-                            ),
-                            Text(
-                              "Price: ৳${sale.sellingPrice}",
-                            ),
-                            Text(
-                              sale.date.toString(),
-                            ),
+                            Text('Barcode: ${r['barcode'] ?? ''}'),
+                            Text('Qty: $qty  •  Price: ৳${sell.toStringAsFixed(2)}'),
+                            Text('Profit: ৳${profit.toStringAsFixed(2)}'),
+                            Text(date),
                           ],
                         ),
                         trailing: Text(
-                          "৳${sale.total.toStringAsFixed(2)}",
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          '৳${total.toStringAsFixed(2)}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
                     );

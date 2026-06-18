@@ -11,6 +11,7 @@ import '../backup/backup_list_screen.dart';
 import '../backup/google_auth_service.dart';
 import '../auth/login_screen.dart';
 import 'settings_screen.dart';
+import '../master/master_screen.dart';
 import '../cart/widgets/cart_icon.dart';
 
 class HomePage extends StatefulWidget {
@@ -66,7 +67,6 @@ class _HomePageState extends State<HomePage> {
                   );
                   break;
                 case HomeMenuAction.backupNow:
-                  setState(() {});
                   try {
                     await BackupService.backupToDrive();
                     if (!mounted) return;
@@ -79,6 +79,14 @@ class _HomePageState extends State<HomePage> {
                       SnackBar(content: Text('Backup failed: $e')),
                     );
                   }
+                  break;
+                case HomeMenuAction.manageTables:
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const MasterScreen(),
+                    ),
+                  );
                   break;
                 case HomeMenuAction.userInfo:
                   Navigator.push(
@@ -133,6 +141,10 @@ class _HomePageState extends State<HomePage> {
               PopupMenuItem(
                 value: HomeMenuAction.backupNow,
                 child: Text('Backup Now'),
+              ),
+              PopupMenuItem(
+                value: HomeMenuAction.manageTables,
+                child: Text('Manage Database'),
               ),
               PopupMenuItem(
                 value: HomeMenuAction.userInfo,
@@ -196,6 +208,7 @@ enum HomeMenuAction {
   settings,
   backupList,
   backupNow,
+  manageTables,
   userInfo,
   logout,
 }

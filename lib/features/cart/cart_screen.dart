@@ -3,7 +3,6 @@ import 'cart_service.dart';
 import 'cart_item_model.dart';
 import '../product/product_service.dart';
 import '../sales/sales_service.dart';
-import '../sales/sale_model.dart';
 import '../product/store_list_screen.dart';
 
 class CartScreen extends StatefulWidget {
@@ -108,32 +107,12 @@ class _CartScreenState extends State<CartScreen> {
       }
     }
 
-    // 🔥 2. PROCESS ORDER
-    for (var item in CartService.items) {
-      final product = productsByBarcode[item.barcode];
-      if (product == null) continue;
-
-      int newStock = product['stock'] - item.qty;
-
-      await ProductService.updateStock(
-        barcode: item.barcode,
-        newStock: newStock,
-      );
-
-      SalesService.addSale(
-        SaleModel(
-          barcode: item.barcode,
-          name: item.name,
-          qty: item.qty,
-          purchasePrice:
-              double.parse(product['purchase_price'].toString()),
-          sellingPrice: item.price,
-          total: item.total,
-          date: DateTime.now(),
-          createdAt: DateTime.now().toIso8601String(),
-        ),
-      );
-    }
+    // 🔥 2. PROCESS ORDER — create sale transactionally (header + items)
+    await SalesService.createSale(
+      CartService.items,
+      productsByBarcode,
+      discount,
+    );
 
     // 🔥 3. CLEAR CART
     // CartService.clear();

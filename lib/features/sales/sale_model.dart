@@ -39,8 +39,8 @@ class SaleModel {
       purchasePrice: map['purchase_price'],
       sellingPrice: map['selling_price'],
       total: map['total'],
-      date: DateTime.parse(map['date']),
-      createdAt: map['createdAt'],
+      date: map['date'] != null ? DateTime.parse(map['date']) : (map['created_at'] != null ? DateTime.parse(map['created_at']) : DateTime.now()),
+      createdAt: map['createdAt'] ?? map['created_at'] ?? '',
     );
   }
 }
