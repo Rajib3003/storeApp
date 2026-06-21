@@ -62,7 +62,8 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
             return const Center(child: Text('No sales data found'));
           }
 
-          final grandTotal = rows.fold<double>(0, (sum, r) => sum + _toDouble(r['total']));
+          final grandTotal =
+              rows.fold<double>(0, (sum, r) => sum + _toDouble(r['total']));
 
           return Column(
             children: [
@@ -76,7 +77,11 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                 ),
                 child: Text(
                   'Total Sales: ৳${grandTotal.toStringAsFixed(2)}',
-                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
 
@@ -85,23 +90,50 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                   itemCount: rows.length,
                   itemBuilder: (context, index) {
                     final r = rows[index];
-                    final name = r['product_name'] ?? r['barcode'] ?? 'Unknown';
-                    final qty = r['qty'] ?? 0;
-                    final sell = _toDouble(r['sell_price'] ?? r['selling_price'] ?? r['sellPrice']);
+
+                    final name =
+                        r['product_name'] ?? r['barcode'] ?? 'Unknown';
+
+                    final qty = _toDouble(r['qty']);
+
+                    final sell =
+                        _toDouble(r['sell_price'] ?? r['selling_price']);
+
                     final total = _toDouble(r['total']);
-                    final profit = _toDouble(r['profit']);
-                    final date = _fmtDate(r['sale_date'] ?? r['created_at']);
+
+                    final profitValue = _toDouble(r['profit']); // 🔥 FIX HERE
+
+                    final date =
+                        _fmtDate(r['sale_date'] ?? r['created_at']);
+
+                    final isLoss = profitValue < 0;
 
                     return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
                       child: ListTile(
                         title: Text(name.toString()),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Barcode: ${r['barcode'] ?? ''}'),
-                            Text('Qty: $qty  •  Price: ৳${sell.toStringAsFixed(2)}'),
-                            Text('Profit: ৳${profit.toStringAsFixed(2)}'),
+                            Text(
+                              'Qty: ${qty.toInt()}  •  Price: ৳${sell.toStringAsFixed(2)}',
+                            ),
+
+                            // 🔥 PROFIT / LOSS SECTION FIXED
+                            Text(
+                              isLoss
+                                  ? 'Loss: ৳${profitValue.abs().toStringAsFixed(2)}'
+                                  : 'Profit: ৳${profitValue.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                color: isLoss ? Colors.red : Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+
                             Text(date),
                           ],
                         ),
