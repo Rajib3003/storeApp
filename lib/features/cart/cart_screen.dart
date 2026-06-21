@@ -108,25 +108,22 @@ class _CartScreenState extends State<CartScreen> {
     }
 
     // 🔥 2. PROCESS ORDER — create sale transactionally (header + items)
-    await SalesService.createSale(
-      CartService.items,
-      productsByBarcode,
-      discount,
-    );
-
-    // 🔥 3. CLEAR CART
-    // CartService.clear();
-
-    // refresh();
-
-    // if (!mounted) return;
-    // ScaffoldMessenger.of(context).showSnackBar(
-    //   SnackBar(
-    //     content: Text(
-    //       "Checkout Done | Paid: ৳${payable.toStringAsFixed(2)}",
-    //     ),
-    //   ),
-    //  );
+    try {
+      await SalesService.createSale(
+        CartService.items.toList(), // Make a copy before clearing
+        productsByBarcode,
+        discount,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Checkout failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
     // 🔥 3. CLEAR CART
     CartService.clear();
@@ -140,6 +137,7 @@ class _CartScreenState extends State<CartScreen> {
         content: Text(
           "Checkout Done | Paid: ৳${payable.toStringAsFixed(2)}",
         ),
+        backgroundColor: Colors.green,
       ),
     );
 
@@ -149,7 +147,6 @@ class _CartScreenState extends State<CartScreen> {
         builder: (_) => const StoreListScreen(),
       ),
     );
-   
   }
 
   @override

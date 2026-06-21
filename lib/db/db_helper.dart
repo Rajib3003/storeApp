@@ -174,38 +174,33 @@ class DBHelper {
         ''');
 
         // Sales (Invoice)
-        await db.execute('''
+       await db.execute('''
         CREATE TABLE sales(
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-
           customer_id INTEGER,
-
-          subtotal REAL,
-
           discount REAL DEFAULT 0,
-
           grand_total REAL,
-
-          payment_method TEXT,
-
-          created_at TEXT
+          payable REAL,
+          date TEXT
         )
         ''');
 
         // Sale Items
-        await db.execute('''
+       await db.execute('''
         CREATE TABLE sale_items(
           id INTEGER PRIMARY KEY AUTOINCREMENT,
 
-          sale_id INTEGER,
+          sale_id INTEGER NOT NULL,
 
           product_id INTEGER,
 
-          qty INTEGER,
+          barcode TEXT,
 
-          purchase_price REAL,
+          qty INTEGER NOT NULL,
 
-          sell_price REAL,
+          purchase_price REAL DEFAULT 0,
+
+          sell_price REAL NOT NULL,
 
           discount REAL DEFAULT 0,
 

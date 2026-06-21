@@ -1,54 +1,116 @@
+import 'package:flutter/foundation.dart';
 import '../../db/db_helper.dart';
 import '../cart/cart_item_model.dart';
 
 class SalesService {
-  /// Legacy single-row sale insert (kept for compatibility) - not recommended.
-  static Future<void> addSale(Map<String, dynamic> saleData) async {
+  static Future<Set<String>> _getSalesColumns() async {
     final db = await DBHelper.db;
-    await db.insert('sales', saleData);
+    final tableInfo = await db.rawQuery('PRAGMA table_info(sales)');
+
+    return tableInfo
+        .map((row) => row['name']?.toString().toLowerCase())
+        .whereType<String>()
+        .toSet();
   }
 
-  /// Create a sale transactionally: one `sales` row + multiple `sale_items` rows.
-  /// `productsByBarcode` maps barcode -> product DB row (must include `id`, `purchase_price`, `stock`).
-  static Future<int> createSale(List<CartItem> items, Map<String, Map<String, dynamic>> productsByBarcode, double discount, {String paymentMethod = 'Cash'}) async {
+  static Future<int> createSale(
+    List<CartItem> items,
+    Map<String, Map<String, dynamic>> productsByBarcode,
+    double discount, {
+    String paymentMethod = 'Cash',
+  }) async {
     final db = await DBHelper.db;
+    final salesColumns = await _getSalesColumns();
 
     return await db.transaction<int>((txn) async {
       final subtotal = items.fold<double>(0, (s, it) => s + it.total);
-      final grandTotal = subtotal - discount;
 
-      final saleId = await txn.insert('sales', {
-        'customer_id': null,
-        'subtotal': subtotal,
-        'discount': discount,
-        'grand_total': grandTotal,
-        'payment_method': paymentMethod,
-        'created_at': DateTime.now().toIso8601String(),
-      });
+      // 🔥 FIXED LOGIC
+      final grandTotal = subtotal;        // original total
+      final payable = subtotal - discount; // customer pays
 
+      final now = DateTime.now().toIso8601String();
+
+      /// =========================
+      /// SALES HEADER
+      /// =========================
+      final saleData = <String, dynamic>{};
+
+      if (salesColumns.contains('customer_id')) {
+        saleData['customer_id'] = null;
+      }
+
+      if (salesColumns.contains('discount')) {
+        saleData['discount'] = discount;
+      }
+
+      if (salesColumns.contains('grand_total')) {
+        saleData['grand_total'] = grandTotal;
+      }
+
+      if (salesColumns.contains('total')) {
+        saleData['total'] = grandTotal;
+      }
+
+      if (salesColumns.contains('date')) {
+        saleData['date'] = now;
+      }
+
+      if (salesColumns.contains('created_at')) {
+        saleData['created_at'] = now;
+      }
+
+      final saleId = await txn.insert('sales', saleData);
+
+      /// =========================
+      /// SALES ITEMS + STOCK UPDATE
+      /// =========================
       for (var item in items) {
         final product = productsByBarcode[item.barcode];
+
         final purchasePrice = product?['purchase_price'] ?? 0;
         final productId = product?['id'];
 
-        final total = item.total;
-        final profit = (item.price - (purchasePrice is num ? purchasePrice.toDouble() : double.tryParse(purchasePrice.toString()) ?? 0)) * item.qty;
+        final originalPrice = item.price;
 
-        await txn.insert('sale_items', {
-          'sale_id': saleId,
-          'product_id': productId,
-          'qty': item.qty,
-          'purchase_price': purchasePrice,
-          'sell_price': item.price,
-          'discount': 0,
-          'total': total,
-          'profit': profit,
-        });
+        // 🔥 discount per item distribute (simple logic)
+        final itemDiscount = discount / items.length;
 
-        // update product stock
+        final sellPriceAfterDiscount = originalPrice - itemDiscount;
+
+        final total = sellPriceAfterDiscount * item.qty;
+
+        final purchase = purchasePrice is num
+            ? purchasePrice.toDouble()
+            : double.tryParse(purchasePrice.toString()) ?? 0;
+
+        final profit = (sellPriceAfterDiscount - purchase) * item.qty;
+
+        /// insert sale item (SAFE)
+        try {
+          await txn.insert('sale_items', {
+            'sale_id': saleId,
+            'product_id': productId,
+            'qty': item.qty,
+            'purchase_price': purchase,
+            'sell_price': sellPriceAfterDiscount,
+            'total': total,
+            'profit': profit,
+          });
+        } catch (e) {
+          debugPrint("sale_items insert failed: $e");
+        }
+
+        /// stock update (ALWAYS RUN)
         if (product != null) {
           final newStock = (product['stock'] ?? 0) - item.qty;
-          await txn.update('products', {'stock': newStock}, where: 'barcode = ?', whereArgs: [item.barcode]);
+
+          await txn.update(
+            'products',
+            {'stock': newStock},
+            where: 'barcode = ?',
+            whereArgs: [item.barcode],
+          );
         }
       }
 
@@ -56,10 +118,8 @@ class SalesService {
     });
   }
 
-  /// NOTE: keep getSales minimal — higher-level reports should use `ReportRepository`.
   static Future<List<Map<String, dynamic>>> getSalesRaw() async {
     final db = await DBHelper.db;
-    final result = await db.query('sales', orderBy: 'created_at DESC');
-    return result;
+    return await db.query('sales', orderBy: 'id DESC');
   }
 }
