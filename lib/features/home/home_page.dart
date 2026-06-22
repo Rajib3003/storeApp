@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/services/sync_service.dart';
+import 'package:myapp/features/network/network_service.dart';
 
 import '../sell/scan_screen.dart';
 import '../product/generate_barcode_screen.dart';
@@ -24,20 +26,40 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
 
   @override
-  void initState() {
-    super.initState();
+void initState() {
+  super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final ok = await DriveService.tryAutoInit();
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
 
-      if (!ok) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
+    final ok = await DriveService.tryAutoInit();
+
+    if (!ok) {
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+      return;
+    }
+
+    // 🌐 Internet check after login success
+    final hasNet = await NetworkService.hasInternet();
+
+    if (hasNet) {
+      try {
+        await SyncService.syncSales();
+        await SyncService.syncProducts();
+        await SyncService.syncCustomers();
+        await SyncService.syncExpenses();
+      } catch (e) {
+        debugPrint("Sync error: $e");
       }
-    });
-  }
+    }
+  });
+}
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

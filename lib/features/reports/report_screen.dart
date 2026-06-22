@@ -14,7 +14,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   List<Map<String, dynamic>> rows = [];
 
-  bool isLoading = false;
+  bool isPaginating = false;
   bool hasMore = true;
 
   DateTime? fromDate;
@@ -26,7 +26,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
   void initState() {
     super.initState();
 
-    // ✅ SCROLL LISTENER (PUT HERE)
     _controller.addListener(() {
       if (_controller.position.pixels >=
           _controller.position.maxScrollExtent - 200) {
@@ -87,23 +86,25 @@ class _ReportsScreenState extends State<ReportsScreen> {
     });
   }
 
-  // ================= LOAD INITIAL =================
+  // ================= INITIAL LOAD =================
 
   Future<void> loadInitial() async {
-    rows.clear();
-    offset = 0;
-    hasMore = true;
+    setState(() {
+      rows.clear();
+      offset = 0;
+      hasMore = true;
+    });
 
     await loadMore();
   }
 
-  // ================= LOAD MORE (PAGINATION) =================
+  // ================= PAGINATION =================
 
   Future<void> loadMore() async {
-    if (isLoading || !hasMore) return;
+    if (isPaginating || !hasMore) return;
     if (fromDate == null || toDate == null) return;
 
-    setState(() => isLoading = true);
+    setState(() => isPaginating = true);
 
     final data = await ReportRepository.getSaleItems(
       from: fromDate,
@@ -111,14 +112,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
       offset: offset,
     );
 
-    if (data.length < ReportRepository.pageSize) {
+    if (data.isEmpty || data.length < ReportRepository.pageSize) {
       hasMore = false;
     }
 
     offset += data.length;
     rows.addAll(data);
 
-    setState(() => isLoading = false);
+    setState(() => isPaginating = false);
   }
 
   // ================= HELPERS =================
@@ -138,7 +139,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final total = rows.fold<double>(
+    final totalSales = rows.fold<double>(
       0,
       (s, r) => s + _toDouble(r['total']),
     );
@@ -148,7 +149,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
       body: Column(
         children: [
-          // ================= DATE SECTION =================
+          // ================= DATE PICKERS =================
           Padding(
             padding: const EdgeInsets.all(10),
             child: Column(
@@ -160,7 +161,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         onPressed: pickFromDate,
                         child: Text(
                           fromDate == null
-                              ? "Select From Date & Time"
+                              ? "Select From Date"
                               : "From: ${_fmt(fromDate)}",
                         ),
                       ),
@@ -171,7 +172,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         onPressed: pickToDate,
                         child: Text(
                           toDate == null
-                              ? "Select To Date & Time"
+                              ? "Select To Date"
                               : "To: ${_fmt(toDate)}",
                         ),
                       ),
@@ -179,14 +180,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
 
                 ElevatedButton(
                   onPressed: () async {
                     if (fromDate == null || toDate == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text("Please select date range"),
+                          content: Text("Please select From & To date"),
                         ),
                       );
                       return;
@@ -205,7 +206,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             const Padding(
               padding: EdgeInsets.all(20),
               child: Text(
-                "Please select From & To date/time",
+                "Please select date range",
                 style: TextStyle(color: Colors.grey),
               ),
             ),
@@ -220,7 +221,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                "Total Sales: ৳${total.toStringAsFixed(2)}",
+                "Total Sales: ৳${totalSales.toStringAsFixed(2)}",
                 style: const TextStyle(color: Colors.white),
               ),
             ),
@@ -232,12 +233,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
               itemCount: rows.length + 1,
               itemBuilder: (context, index) {
                 if (index == rows.length) {
-                  return hasMore
-                      ? const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Center(child: CircularProgressIndicator()),
-                        )
-                      : const SizedBox();
+                  if (!isPaginating) return const SizedBox();
+
+                  return const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
                 }
 
                 final r = rows[index];
@@ -247,8 +248,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 final purchasePrice = _toDouble(r['purchase_price']);
 
                 // ✅ REAL PROFIT CALCULATION
-                final profit = (sellPrice - purchasePrice) * qty;                
+                final profit = (sellPrice - purchasePrice) * qty;
                 final isLoss = profit < 0;
+                
 
                 return Card(
                   child: ListTile(
@@ -267,6 +269,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
                             color: isLoss ? Colors.red : Colors.green,
                             fontWeight: FontWeight.bold,
                           ),
+                        ),
+                        Text(
+                          "Date: ${_fmt(DateTime.tryParse(r['sale_date'] ?? ''))}",
+                          style: const TextStyle(color: Colors.grey),
                         ),
                       ],
                     ),

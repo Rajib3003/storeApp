@@ -1,14 +1,28 @@
 import 'package:flutter/material.dart';
+import 'firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:myapp/services/network_watcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'features/auth/login_screen.dart';
 import 'features/splash/splash_screen.dart';
 // import 'main_home.dart';
 import 'features/home/home_page.dart';
+bool firebaseReady = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const MyApp());
+
+  // ⚠️ AFTER APP START, NOT BEFORE
+  Future.delayed(const Duration(seconds: 2), () {
+    NetworkWatcher.startListening();
+  });
 }
 
 class MyApp extends StatelessWidget {

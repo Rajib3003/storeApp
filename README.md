@@ -33,3 +33,42 @@ v.	Je product gulo stock 0 se product gulo alada table e show korbe.
 9.	Full database ta jar jar mobile er google drive e store hobe. 
 
 
+
+# My work
+1. ami je backup nitachi ar backup list dekhtachi oita kaj ki? jokhon uninstall korbo ofcourse jante chabe or auto ekta backup hobe then uninstall hobe. abar jokhon install korbo tokhon je gmail diye ekbar login korchi oi gmail diye again install kori ta hoile ofcourse database backup theke nibe then full data thakbe. 
+2. apk link korte chai. 
+
+# ja korechi 
+User Login (Gmail)
+
+        ↓
+
+SQLite Database (Offline)
+- Product
+- Sell
+- Customer
+- Stock
+- Expense
+সব data এখানে save হবে।
+
+        ↓
+
+Internet আছে?
+ ├─ না → শুধু SQLite এ save হবে।
+ │
+ └─ হ্যাঁ →
+      Pending data check করবে।
+      Server/Firebase এ Auto Sync হবে।
+      unsynced_data = 0
+
+        ↓
+
+Settings Page
+- Backup Now
+- Backup List
+- Last Backup Time
+- Unsynced Data Count
+
+যেমন:
+Last Backup : 21 Jun 2026 10:30 PM
+Unsynced Data : 15
