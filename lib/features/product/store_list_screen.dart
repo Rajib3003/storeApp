@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'product_service.dart';
 import 'product_label_screen.dart';
+import 'package:myapp/widgets/home_leading_button.dart';
 
 class StoreListScreen extends StatefulWidget {
   const StoreListScreen({super.key});
@@ -97,7 +98,10 @@ class _StoreListScreenState extends State<StoreListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Store Products")),
+      appBar: AppBar(
+        title: const Text("Products List"),
+        leading: const HomeLeadingButton(),
+        ),
 
       body: Column(
         children: [

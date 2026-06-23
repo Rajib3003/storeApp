@@ -8,6 +8,8 @@ import '../../main.dart'; // 👈 HomePage এখান থেকে আসব�
 import 'package:myapp/features/sell/sell_screen.dart';
 import '../cart/widgets/cart_icon.dart';
 import '../home/home_page.dart';
+import 'package:myapp/widgets/home_leading_button.dart';
+import 'package:myapp/utils/digit_encoder.dart';
 
 class ProductLabelScreen extends StatelessWidget {
   final String productName;
@@ -62,18 +64,16 @@ class ProductLabelScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+   
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Product Label"),
+        title: const Text("Details"),
 
         // LEFT SIDE BUTTONS
         leadingWidth: 120,
         leading: Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.home),
-              onPressed: () => goHome(context),
-            ),
+            const HomeLeadingButton(),
             IconButton(
               icon: const Icon(Icons.add),
               onPressed: () => goAddProduct(context),
@@ -132,7 +132,10 @@ class ProductLabelScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    Text("Purchase Price: $purchasePrice"),
+                    
+                    Text(
+                      "Price: ${PriceHelper.toEncodedDisplay(purchasePrice)}",
+                    ),
                     Text("Selling Price: $sellingPrice"),
                     Text("Stock: $stock"),
                   ],
@@ -140,7 +143,7 @@ class ProductLabelScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
 
             SizedBox(
               width: double.infinity,
@@ -151,7 +154,7 @@ class ProductLabelScreen extends StatelessWidget {
                 label: Text("PRINT $stock LABELS"),
               ),
             ),
-
+            const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
               height: 55,

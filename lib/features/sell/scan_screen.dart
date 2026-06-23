@@ -3,6 +3,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../product/product_service.dart';
 import 'sell_screen.dart';
+import 'package:myapp/widgets/home_leading_button.dart';
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
@@ -17,7 +18,11 @@ class _ScanScreenState extends State<ScanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Scan Product")),
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text("Scan Product"),
+        leading: const HomeLeadingButton(),
+      ),
       body: MobileScanner(
         onDetect: (capture) async {
           if (scanned) return;

@@ -5,6 +5,8 @@ import 'package:barcode_widget/barcode_widget.dart';
 import 'product_service.dart';
 import '../../services/pdf_service.dart';
 import 'product_label_screen.dart';
+import 'package:myapp/widgets/home_leading_button.dart';
+import 'package:myapp/utils/digit_encoder.dart';
 
 
 class GenerateBarcodeScreen extends StatefulWidget {
@@ -38,8 +40,8 @@ class _GenerateBarcodeScreenState extends State<GenerateBarcodeScreen> {
   String get qrData => '''
 {
   "name": "${nameController.text}",
-  "barcode": "$barcode",
-  "purchase": "${purchaseController.text}",
+  "barcode": "$barcode",  
+  "purchase": "${PriceHelper.toEncodedDisplay(purchaseController.text)}",
   "selling": "${sellingController.text}",
   "stock": "${stockController.text}"
 }
@@ -155,6 +157,7 @@ class _GenerateBarcodeScreenState extends State<GenerateBarcodeScreen> {
       appBar: AppBar(
         title: const Text("Generate Barcode"),
         centerTitle: true,
+        leading: const HomeLeadingButton(),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

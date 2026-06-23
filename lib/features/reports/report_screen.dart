@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'report_repository.dart';
+import 'package:myapp/widgets/home_leading_button.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -145,8 +146,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Sales Report")),
-
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text("Sales Report"),
+        leading: const HomeLeadingButton(),
+      ),
       body: Column(
         children: [
           // ================= DATE PICKERS =================

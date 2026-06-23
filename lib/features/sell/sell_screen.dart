@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../cart/cart_service.dart';
 import '../cart/cart_item_model.dart';
+import 'package:myapp/utils/digit_encoder.dart';
 
 class SellScreen extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -96,6 +97,8 @@ class _SellScreenState extends State<SellScreen> {
 
             Text("Barcode: ${product['barcode']}"),
             Text("Stock: ${product['stock']}"),
+            Text("Price: ${PriceHelper.toEncodedDisplay(product['purchase_price'].toString())}"),
+
 
             const SizedBox(height: 20),
 

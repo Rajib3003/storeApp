@@ -64,7 +64,7 @@ void initState() {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Store Dashboard"),
+        title: const Text("Dashboard"),
         centerTitle: true,
         actions: [
           const CartIcon(),
@@ -185,25 +185,25 @@ void initState() {
       body: Padding(
         padding: const EdgeInsets.all(12),
         child: GridView.count(
-          crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
+          crossAxisCount: 4,
+          mainAxisSpacing: 14,
+          crossAxisSpacing: 14,
           children: [
             const HomeMenuButton(
               icon: Icons.qr_code_scanner,
-              label: "Scan & Sell",
+              label: "Scan",
               color: Colors.green,
               page: ScanScreen(),
             ),
             const HomeMenuButton(
               icon: Icons.add_box,
-              label: "Add Product",
+              label: "Add",
               color: Colors.blue,
               page: GenerateBarcodeScreen(),
             ),
             const HomeMenuButton(
               icon: Icons.list,
-              label: "Products",
+              label: "List",
               color: Colors.orange,
               page: StoreListScreen(),
             ),
@@ -273,11 +273,11 @@ class HomeMenuButton extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 40),
-            const SizedBox(height: 10),
+            Icon(icon, color: color, size: 30),
+            const SizedBox(height: 6),
             Text(label,
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 10,
                   fontWeight: FontWeight.w600,
                 ))
           ],

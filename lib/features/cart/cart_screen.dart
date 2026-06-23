@@ -4,6 +4,7 @@ import 'cart_item_model.dart';
 import '../product/product_service.dart';
 import '../sales/sales_service.dart';
 import '../product/store_list_screen.dart';
+import 'package:myapp/widgets/home_leading_button.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -154,7 +155,7 @@ class _CartScreenState extends State<CartScreen> {
     final items = CartService.items;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Cart")),
+      appBar: AppBar(centerTitle: true,title: const Text("Cart"), leading: const HomeLeadingButton()),
       body: items.isEmpty
           ? const Center(child: Text("Cart is empty"))
           : Column(
