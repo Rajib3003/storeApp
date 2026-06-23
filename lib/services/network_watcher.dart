@@ -7,19 +7,16 @@ class NetworkWatcher {
   static bool _isSyncing = false;
 
   static void startListening() {
-    Connectivity().onConnectivityChanged.listen((result) async {
-      if (result == ConnectivityResult.none) return;
+    Connectivity().onConnectivityChanged.listen((results) async {
 
+      if (results.contains(ConnectivityResult.none)) return;
       if (!firebaseReady) return;
       if (Firebase.apps.isEmpty) return;
-
-      if (_isSyncing) return; // prevent duplicate sync
+      if (_isSyncing) return;
 
       try {
         _isSyncing = true;
         await SyncService.syncAll();
-      } catch (e) {
-        print("Sync error: $e");
       } finally {
         _isSyncing = false;
       }

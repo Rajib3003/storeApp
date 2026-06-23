@@ -2,8 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../db/db_helper.dart';
 
 class SyncService {
+  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // ================= SALES SYNC =================
+  // ================= SALES =================
   static Future<void> syncSales() async {
     final db = await DBHelper.db;
 
@@ -14,8 +15,7 @@ class SyncService {
     );
 
     for (final row in rows) {
-      await FirebaseFirestore.instance
-          .collection("sales")
+      await _firestore.collection("sales")
           .doc(row['id'].toString())
           .set(row);
 
@@ -39,8 +39,7 @@ class SyncService {
     );
 
     for (final row in rows) {
-      await FirebaseFirestore.instance
-          .collection("products")
+      await _firestore.collection("products")
           .doc(row['id'].toString())
           .set(row);
 
@@ -64,8 +63,7 @@ class SyncService {
     );
 
     for (final row in rows) {
-      await FirebaseFirestore.instance
-          .collection("customers")
+      await _firestore.collection("customers")
           .doc(row['id'].toString())
           .set(row);
 
@@ -89,8 +87,7 @@ class SyncService {
     );
 
     for (final row in rows) {
-      await FirebaseFirestore.instance
-          .collection("expenses")
+      await _firestore.collection("expenses")
           .doc(row['id'].toString())
           .set(row);
 
@@ -110,12 +107,12 @@ class SyncService {
     await syncCustomers();
     await syncExpenses();
 
-    // ✅ backup log
-  final db = await DBHelper.db;
-  await db.insert('backup_logs', {
-    'file_name': 'auto_sync',
-    'backup_date': DateTime.now().toString(),
-    'status': 'success',
-  });
+    final db = await DBHelper.db;
+
+    await db.insert('backup_logs', {
+      'file_name': 'auto_sync',
+      'backup_date': DateTime.now().toString(),
+      'status': 'success',
+    });
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:myapp/services/restore_service.dart';
 
 import '../backup/google_auth_service.dart';
 import '../backup/drive_service.dart';
@@ -26,6 +27,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   await DriveService.initDrive(user);
+  // 🔥 IMPORTANT: RESTORE DATA AFTER LOGIN
+  await RestoreService.restoreAll();
 
   final prefs = await SharedPreferences.getInstance();
   await prefs.setBool("google_logged_in", true);
