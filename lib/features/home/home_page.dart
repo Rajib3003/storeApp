@@ -183,11 +183,11 @@ void initState() {
       ),
 
       body: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(20),
         child: GridView.count(
           crossAxisCount: 4,
-          mainAxisSpacing: 14,
-          crossAxisSpacing: 14,
+          mainAxisSpacing: 20,
+          crossAxisSpacing: 20,
           children: [
             const HomeMenuButton(
               icon: Icons.qr_code_scanner,

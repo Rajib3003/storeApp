@@ -16,13 +16,13 @@ class PdfService {
         build: (context) {
           return [
             pw.Wrap(
-              spacing: 20,
-              runSpacing: 20,
+              spacing: 10,
+              runSpacing: 10,
 
               // 🔥 MULTIPLE LABELS BASED ON STOCK
               children: List.generate(quantity, (index) {
                 return pw.Container(
-                  width: 180,
+                  width: 100,
                   padding: const pw.EdgeInsets.all(10),
                   decoration: pw.BoxDecoration(
                     border: pw.Border.all(color: PdfColors.black),
@@ -47,7 +47,7 @@ class PdfService {
                         barcode: pw.Barcode.code128(),
                         data: barcode,
                         width: 150,
-                        height: 50,
+                        height: 20,
                       ),
 
                       pw.SizedBox(height: 8),
@@ -56,8 +56,8 @@ class PdfService {
                       pw.BarcodeWidget(
                         barcode: pw.Barcode.qrCode(),
                         data: barcode,
-                        width: 80,
-                        height: 80,
+                        width: 40,
+                        height: 40,
                       ),
 
                       pw.SizedBox(height: 5),

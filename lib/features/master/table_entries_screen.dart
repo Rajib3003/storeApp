@@ -30,7 +30,11 @@ class _TableEntriesScreenState extends State<TableEntriesScreen> {
   }
 
   String _buildRowSummary(Map<String, dynamic> row) {
-    final keys = row.keys.where((key) => key != 'id').take(3).toList();
+    final keys = row.keys.where((key) =>
+          key != 'id' &&
+          row[key] != null &&
+          row[key].toString().trim().isNotEmpty &&
+          row[key].toString().toLowerCase() != 'null').take(3).toList();
     final values = keys.map((key) => '${row[key]}').join(' | ');
     return values.isEmpty ? 'No fields' : values;
   }
