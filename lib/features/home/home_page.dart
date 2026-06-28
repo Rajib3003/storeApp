@@ -16,6 +16,7 @@ import 'settings_screen.dart';
 import '../master/master_screen.dart';
 import '../cart/widgets/cart_icon.dart';
 
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -215,6 +216,12 @@ void initState() {
               label: "Reports",
               color: Colors.red,
               page: ReportsScreen(),
+            ),
+            const HomeMenuButton(
+              icon: Icons.storage,
+              label: "Master",
+              color: Colors.teal,
+              page: MasterScreen(),
             ),
           ],
         ),
