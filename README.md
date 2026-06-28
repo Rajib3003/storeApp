@@ -38,6 +38,11 @@ v.	Je product gulo stock 0 se product gulo alada table e show korbe.
 1. ami je backup nitachi ar backup list dekhtachi oita kaj ki? jokhon uninstall korbo ofcourse jante chabe or auto ekta backup hobe then uninstall hobe. abar jokhon install korbo tokhon je gmail diye ekbar login korchi oi gmail diye again install kori ta hoile ofcourse database backup theke nibe then full data thakbe. 
 2. apk link korte chai. 
 
+3. 28/06/26
+firebase e je report gulo update hoitache oi gulo jeno mobile e o update hoy or moible je gulo update hoitache oi gulo jeno firebase e o update hoy.
+
+4. barcode genarete full database er moto hobe. then baki gulo category color size etc gulo o korte hobe. 
+
 # ja korechi 
 User Login (Gmail)
 

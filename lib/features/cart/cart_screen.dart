@@ -5,6 +5,7 @@ import '../product/product_service.dart';
 import '../sales/sales_service.dart';
 import '../product/store_list_screen.dart';
 import 'package:myapp/widgets/home_leading_button.dart';
+import '../../services/sync_service.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -115,6 +116,11 @@ class _CartScreenState extends State<CartScreen> {
         productsByBarcode,
         discount,
       );
+      await SyncService.syncProducts();
+      await SyncService.syncSales();
+      await SyncService.syncSaleItems();
+
+
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

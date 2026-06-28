@@ -28,6 +28,31 @@ class SyncService {
     }
   }
 
+  // ================= SALES ITEMS =================
+  static Future<void> syncSaleItems() async {
+  final db = await DBHelper.db;
+
+  final rows = await db.query(
+    'sale_items',
+    where: 'sync_status = ?',
+    whereArgs: [0],
+  );
+
+  for (final row in rows) {
+    await _firestore
+        .collection("sale_items")
+        .doc(row['id'].toString())
+        .set(row);
+
+    await db.update(
+      'sale_items',
+      {'sync_status': 1},
+      where: 'id = ?',
+      whereArgs: [row['id']],
+    );
+  }
+}
+
   // ================= PRODUCTS =================
   static Future<void> syncProducts() async {
     final db = await DBHelper.db;
@@ -39,9 +64,13 @@ class SyncService {
     );
 
     for (final row in rows) {
+      print("Uploading Product ID: ${row['id']}");
+      print("Stock: ${row['stock']}");
       await _firestore.collection("products")
           .doc(row['id'].toString())
           .set(row);
+
+      print("Uploaded Successfully");
 
       await db.update(
         'products',
@@ -103,6 +132,7 @@ class SyncService {
   // ================= MASTER =================
   static Future<void> syncAll() async {
     await syncSales();
+    await syncSaleItems();
     await syncProducts();
     await syncCustomers();
     await syncExpenses();

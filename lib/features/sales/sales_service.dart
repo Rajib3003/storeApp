@@ -23,6 +23,7 @@ class SalesService {
     final salesColumns = await _getSalesColumns();
 
     return await db.transaction<int>((txn) async {
+      
       final subtotal = items.fold<double>(0, (s, it) => s + it.total);
 
       // 🔥 FIXED LOGIC
@@ -74,9 +75,13 @@ class SalesService {
         final originalPrice = item.price;
 
         // 🔥 discount per item distribute (simple logic)
-        final itemDiscount = discount / items.length;
+        // final itemDiscount = discount / items.length;
+        // final itemDiscount = (originalPrice / subtotal) * discount;
+        final itemDiscount = double.parse((((originalPrice / subtotal) * discount).toStringAsFixed(2)));
 
         final sellPriceAfterDiscount = originalPrice - itemDiscount;
+
+        
 
         final total = sellPriceAfterDiscount * item.qty;
 
@@ -91,11 +96,15 @@ class SalesService {
           await txn.insert('sale_items', {
             'sale_id': saleId,
             'product_id': productId,
+            'barcode': item.barcode,
             'qty': item.qty,
             'purchase_price': purchase,
             'sell_price': sellPriceAfterDiscount,
+            'discount': itemDiscount,
             'total': total,
             'profit': profit,
+            'created_at': now,
+            'sync_status': 0,
           });
         } catch (e) {
           debugPrint("sale_items insert failed: $e");
@@ -107,7 +116,11 @@ class SalesService {
 
           await txn.update(
             'products',
-            {'stock': newStock},
+             {
+                'stock': newStock,
+                'sync_status': 0,
+                'updated_at': DateTime.now().toIso8601String(),
+              },
             where: 'barcode = ?',
             whereArgs: [item.barcode],
           );
