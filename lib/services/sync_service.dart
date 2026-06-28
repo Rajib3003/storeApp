@@ -2,147 +2,67 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../db/db_helper.dart';
 
 class SyncService {
-  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static final FirebaseFirestore _firestore =
+      FirebaseFirestore.instance;
 
-  // ================= SALES =================
-  static Future<void> syncSales() async {
+  // ================= GENERIC TABLE SYNC =================
+  static Future<void> syncTable(String tableName) async {
     final db = await DBHelper.db;
 
     final rows = await db.query(
-      'sales',
+      tableName,
       where: 'sync_status = ?',
       whereArgs: [0],
     );
 
     for (final row in rows) {
-      await _firestore.collection("sales")
+      await _firestore
+          .collection(tableName)
           .doc(row['id'].toString())
           .set(row);
 
       await db.update(
-        'sales',
-        {'sync_status': 1},
+        tableName,
+        {
+          'sync_status': 1,
+          'synced_at': DateTime.now().toIso8601String(),
+        },
         where: 'id = ?',
         whereArgs: [row['id']],
       );
     }
   }
 
-  // ================= SALES ITEMS =================
-  static Future<void> syncSaleItems() async {
-  final db = await DBHelper.db;
-
-  final rows = await db.query(
-    'sale_items',
-    where: 'sync_status = ?',
-    whereArgs: [0],
-  );
-
-  for (final row in rows) {
-    await _firestore
-        .collection("sale_items")
-        .doc(row['id'].toString())
-        .set(row);
-
-    await db.update(
-      'sale_items',
-      {'sync_status': 1},
-      where: 'id = ?',
-      whereArgs: [row['id']],
-    );
-  }
-}
-
-  // ================= PRODUCTS =================
-  static Future<void> syncProducts() async {
-    final db = await DBHelper.db;
-
-    final rows = await db.query(
-      'products',
-      where: 'sync_status = ?',
-      whereArgs: [0],
-    );
-
-    for (final row in rows) {
-      print("Uploading Product ID: ${row['id']}");
-      print("Stock: ${row['stock']}");
-      await _firestore.collection("products")
-          .doc(row['id'].toString())
-          .set(row);
-
-      print("Uploaded Successfully");
-
-      await db.update(
-        'products',
-        {'sync_status': 1},
-        where: 'id = ?',
-        whereArgs: [row['id']],
-      );
-    }
-  }
-
-  // ================= CUSTOMERS =================
-  static Future<void> syncCustomers() async {
-    final db = await DBHelper.db;
-
-    final rows = await db.query(
-      'customers',
-      where: 'sync_status = ?',
-      whereArgs: [0],
-    );
-
-    for (final row in rows) {
-      await _firestore.collection("customers")
-          .doc(row['id'].toString())
-          .set(row);
-
-      await db.update(
-        'customers',
-        {'sync_status': 1},
-        where: 'id = ?',
-        whereArgs: [row['id']],
-      );
-    }
-  }
-
-  // ================= EXPENSES =================
-  static Future<void> syncExpenses() async {
-    final db = await DBHelper.db;
-
-    final rows = await db.query(
-      'expenses',
-      where: 'sync_status = ?',
-      whereArgs: [0],
-    );
-
-    for (final row in rows) {
-      await _firestore.collection("expenses")
-          .doc(row['id'].toString())
-          .set(row);
-
-      await db.update(
-        'expenses',
-        {'sync_status': 1},
-        where: 'id = ?',
-        whereArgs: [row['id']],
-      );
-    }
-  }
-
-  // ================= MASTER =================
+  // ================= SYNC ALL TABLES =================
   static Future<void> syncAll() async {
-    await syncSales();
-    await syncSaleItems();
-    await syncProducts();
-    await syncCustomers();
-    await syncExpenses();
+    await syncTable("categories");
+    await syncTable("brands");
+    await syncTable("colors");
+    await syncTable("sizes");
 
-    final db = await DBHelper.db;
+    await syncTable("suppliers");
+    await syncTable("customers");
 
-    await db.insert('backup_logs', {
-      'file_name': 'auto_sync',
-      'backup_date': DateTime.now().toString(),
-      'status': 'success',
-    });
+    await syncTable("users");
+    await syncTable("roles");
+
+    await syncTable("settings");
+
+    await syncTable("products");
+
+    await syncTable("purchases");
+    await syncTable("purchase_items");
+
+    await syncTable("sales");
+    await syncTable("sale_items");
+
+    await syncTable("expense_categories");
+    await syncTable("expenses");
+
+    await syncTable("stock_history");
+
+    await syncTable("customer_payments");
+
+    await syncTable("backup_logs");
   }
 }

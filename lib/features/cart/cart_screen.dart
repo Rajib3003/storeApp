@@ -116,9 +116,7 @@ class _CartScreenState extends State<CartScreen> {
         productsByBarcode,
         discount,
       );
-      await SyncService.syncProducts();
-      await SyncService.syncSales();
-      await SyncService.syncSaleItems();
+      await SyncService.syncAll();
 
 
     } catch (e) {

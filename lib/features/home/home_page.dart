@@ -48,10 +48,7 @@ void initState() {
 
     if (hasNet) {
       try {
-        await SyncService.syncSales();
-        await SyncService.syncProducts();
-        await SyncService.syncCustomers();
-        await SyncService.syncExpenses();
+       await SyncService.syncAll();
       } catch (e) {
         debugPrint("Sync error: $e");
       }
