@@ -17,19 +17,42 @@ class MasterService {
     return await db.query(table, orderBy: orderBy);
   }
 
-  static Future<int> insert(
-    String table,
-    Map<String, dynamic> values,
-  ) async {
-    final db = await DBHelper.db;
+ static Future<int> insert(
+  String table,
+  Map<String, dynamic> values,
+) async {
 
-    final payload = Map<String, dynamic>.from(values);
-    if (table == 'settings' && !payload.containsKey('id')) {
-      payload['id'] = 1;
-    }
+  final dbClient = await DBHelper.db;
 
-    return await db.insert(table, payload);
+  final payload = Map<String, dynamic>.from(values);
+
+  if (table == 'settings' &&
+      !payload.containsKey('id')) {
+    payload['id'] = 1;
   }
+
+  final id = await dbClient.insert(
+    table,
+    payload,
+  );
+
+  if (table == 'products') {
+
+    final barcode =
+        "SMARTSHOP${id.toString().padLeft(6, '0')}";
+
+    await dbClient.update(
+      "products",
+      {
+        "barcode": barcode,
+      },
+      where: "id=?",
+      whereArgs: [id],
+    );
+  }
+
+  return id;
+}
 
   static Future<List<Map<String, dynamic>>> getTableColumns(
     String table,

@@ -24,5 +24,29 @@ class TableConfig {
     "expense_categories": [
       "name",
     ],
+    'suppliers': [
+      'supplier_name',
+      'phone',
+      'address',
+      'total_due',
+    ],
+    'customers': [
+      'customer_name',
+      'phone',
+      'address',
+      'total_due',
+    ],
+    'products': [
+      'photo',
+      'name',
+      'category_id',
+      'brand_id',
+      'size_id',
+      'color_id',
+      'purchase_price',
+      'selling_price',
+      'stock',
+      'low_stock_alert',
+    ],
   };
 }

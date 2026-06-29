@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/services/sync_service.dart';
 import 'package:myapp/features/network/network_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../sell/scan_screen.dart';
 import '../product/generate_barcode_screen.dart';
@@ -17,6 +18,7 @@ import '../master/master_screen.dart';
 import '../cart/widgets/cart_icon.dart';
 
 
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -29,32 +31,68 @@ class _HomePageState extends State<HomePage> {
   @override
 void initState() {
   super.initState();
-
   WidgetsBinding.instance.addPostFrameCallback((_) async {
 
-    final ok = await DriveService.tryAutoInit();
+  final prefs = await SharedPreferences.getInstance();
+  final loggedIn = prefs.getBool("google_logged_in") ?? false;
 
-    if (!ok) {
-      if (!mounted) return;
+  // প্রথমবার login না করলে LoginScreen দেখাবে
+  if (!loggedIn) {
+    if (!mounted) return;
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
-      return;
-    }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
+    return;
+  }
 
-    // 🌐 Internet check after login success
-    final hasNet = await NetworkService.hasInternet();
+  // Login করা আছে
+  final hasNet = await NetworkService.hasInternet();
 
-    if (hasNet) {
-      try {
-       await SyncService.syncAll();
-      } catch (e) {
-        debugPrint("Sync error: $e");
+  if (hasNet) {
+    try {
+      final ok = await DriveService.tryAutoInit();
+
+      if (ok) {
+        await SyncService.syncAll();
       }
+    } catch (e) {
+      debugPrint("Sync error: $e");
     }
-  });
+  }
+
+  // Internet না থাকলে কিছুই করবে না।
+  // User HomePage-তেই থাকবে।
+});
+
+  // WidgetsBinding.instance.addPostFrameCallback((_) async {
+
+  //   final ok = await DriveService.tryAutoInit();
+
+  //   if (!ok) {
+  //     if (!mounted) return;
+
+  //     Navigator.pushReplacement(
+  //       context,
+  //       MaterialPageRoute(builder: (_) => const LoginScreen()),
+  //     );
+  //     return;
+  //   }
+
+  //   // 🌐 Internet check after login success
+  //   final hasNet = await NetworkService.hasInternet();
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final loggedIn = prefs.getBool("google_logged_in") ?? false;
+
+  //   if (hasNet) {
+  //     try {
+  //      await SyncService.syncAll();
+  //     } catch (e) {
+  //       debugPrint("Sync error: $e");
+  //     }
+  //   }
+  // });
 }
 
 
@@ -136,7 +174,8 @@ void initState() {
                   );
 
                   if (confirmed != true) return;
-
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool("google_logged_in", false);
                   await GoogleAuthService.signOut();
 
                   if (!mounted) return;

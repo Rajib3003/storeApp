@@ -17,29 +17,46 @@ class _LoginScreenState extends State<LoginScreen> {
   bool loading = false;
 
   Future<void> login() async {
-  setState(() => loading = true);
+    setState(() => loading = true);
 
-  final user = await GoogleAuthService.signIn();
+    try {
+      final user = await GoogleAuthService.signIn();
 
-  if (user == null) {
-    setState(() => loading = false);
-    return;
+      if (user == null) {
+        setState(() => loading = false);
+        return;
+      }
+
+      // Initialize Google Drive
+      await DriveService.initDrive(user);
+
+      // Restore Firebase data to local SQLite
+      await RestoreService.restoreAll();
+
+      // Save login status (Only first login)
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool("google_logged_in", true);
+
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const HomePage(),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Login failed: $e")),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => loading = false);
+      }
+    }
   }
-
-  await DriveService.initDrive(user);
-  // 🔥 IMPORTANT: RESTORE DATA AFTER LOGIN
-  await RestoreService.restoreAll();
-
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setBool("google_logged_in", true);
-
-  if (!mounted) return;
-
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (_) => HomePage()),
-  );
-}
 
   @override
   Widget build(BuildContext context) {

@@ -77,3 +77,43 @@ Settings Page
 যেমন:
 Last Backup : 21 Jun 2026 10:30 PM
 Unsynced Data : 15
+
+
+# photo
+Camera
+
+↓
+
+Gallery
+
+↓
+
+Image Picker
+
+↓
+
+Copy Image
+
+↓
+
+Application Folder
+
+↓
+
+Photo Path
+
+↓
+
+SQLite
+
+↓
+
+Firebase Backup
+
+↓
+
+Restore
+
+↓
+
+Image দেখা যাবে
