@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import '../backup/backup_list_screen.dart';
+
 import '../auth/login_screen.dart';
 import '../backup/backup_service.dart';
 import '../backup/drive_service.dart';
@@ -113,19 +113,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       }
                     },
                   ),
-                  const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.cloud),
-                    label: const Text('Open Backup List'),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const BackupListScreen(),
-                        ),
-                      );
-                    },
-                  ),
+                  
                   const SizedBox(height: 12),
                   ElevatedButton.icon(
                     icon: const Icon(Icons.logout),

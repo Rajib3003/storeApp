@@ -44,7 +44,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (loggedIn) {
       try {
-        driveReady = await DriveService.tryAutoInit();
+        driveReady = await DriveService.initialize();;
       } catch (_) {
         driveReady = false;
       }

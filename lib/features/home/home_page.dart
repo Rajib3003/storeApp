@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/services/sync_service.dart';
+// import 'package:myapp/services/sync_service.dart';
 import 'package:myapp/features/network/network_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,7 +10,7 @@ import '../cart/cart_screen.dart';
 import '../reports/report_screen.dart';
 import '../backup/drive_service.dart';
 import '../backup/backup_service.dart';
-import '../backup/backup_list_screen.dart';
+
 import '../backup/google_auth_service.dart';
 import '../auth/login_screen.dart';
 import 'settings_screen.dart';
@@ -52,10 +52,10 @@ void initState() {
 
   if (hasNet) {
     try {
-      final ok = await DriveService.tryAutoInit();
+      final ok = await DriveService.initialize();
 
       if (ok) {
-        await SyncService.syncAll();
+        // await SyncService.syncAll();
       }
     } catch (e) {
       debugPrint("Sync error: $e");
@@ -116,14 +116,7 @@ void initState() {
                     ),
                   );
                   break;
-                case HomeMenuAction.backupList:
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const BackupListScreen(),
-                    ),
-                  );
-                  break;
+               
                 case HomeMenuAction.backupNow:
                   try {
                     await BackupService.backupToDrive();
@@ -192,10 +185,6 @@ void initState() {
               PopupMenuItem(
                 value: HomeMenuAction.settings,
                 child: Text('Settings'),
-              ),
-              PopupMenuItem(
-                value: HomeMenuAction.backupList,
-                child: Text('Backup List'),
               ),
               PopupMenuItem(
                 value: HomeMenuAction.backupNow,
@@ -270,8 +259,7 @@ void initState() {
 }
 
 enum HomeMenuAction {
-  settings,
-  backupList,
+  settings,  
   backupNow,
   manageTables,
   userInfo,

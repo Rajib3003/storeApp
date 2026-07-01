@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:firebase_storage/firebase_storage.dart';
+
 import 'package:image_picker/image_picker.dart';
 
 class PhotoService {
@@ -34,20 +34,20 @@ class PhotoService {
 
   // ================= FIREBASE STORAGE =================
 
-  static Future<String?> upload(File image) async {
-    try {
-      final fileName =
-          "products/${DateTime.now().millisecondsSinceEpoch}.jpg";
+  // static Future<String?> upload(File image) async {
+  //   try {
+  //     final fileName =
+  //         "products/${DateTime.now().millisecondsSinceEpoch}.jpg";
 
-      final ref =
-          FirebaseStorage.instance.ref().child(fileName);
+  //     // final ref =
+  //         // FirebaseStorage.instance.ref().child(fileName);
 
-      await ref.putFile(image);
+  //     // await ref.putFile(image);
 
-      return await ref.getDownloadURL();
-    } catch (e) {
-      print(e);
-      return null;
-    }
-  }
+  //     return await ref.getDownloadURL();
+  //   } catch (e) {
+  //     print(e);
+  //     return null;
+  //   }
+  // }
 }

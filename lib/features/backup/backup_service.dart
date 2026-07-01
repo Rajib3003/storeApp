@@ -1,36 +1,82 @@
 import 'dart:io';
+
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'google_auth_service.dart';
 import 'drive_service.dart';
 
 class BackupService {
+  BackupService._();
 
-  static Future<File> _dbFile() async {
-    final path = await getDatabasesPath();
-    return File(join(path, "store.db"));
+  static Future<File> _databaseFile() async {
+    final dbPath = await getDatabasesPath();
+
+    return File(
+      join(dbPath, "store.db"),
+    );
   }
 
-  // ✅ FIX: this was missing
-  static Future<File> localBackup() async {
-    final db = await _dbFile();
+  static Future<Directory> _photoDirectory() async {
+    final appDir = await getApplicationDocumentsDirectory();
 
-    final backupPath = join(db.parent.path, "backup.db");
+    final dir = Directory(
+      join(appDir.path, "photos"),
+    );
 
-    return await db.copy(backupPath);
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+
+    return dir;
   }
 
-  // ✅ MAIN DRIVE BACKUP
+  // ==========================
+  // BACKUP DATABASE + PHOTOS
+  // ==========================
+
   static Future<void> backupToDrive() async {
-    final user = await GoogleAuthService.signIn();
+    final ok = await DriveService.initialize();
 
-    if (user == null) return;
+    if (!ok) {
+      throw Exception("Google Drive login failed.");
+    }
 
-    await DriveService.initDrive(user);
+    final db = await _databaseFile();
 
-    final file = await localBackup();
+    await DriveService.uploadDatabase(db);
 
-    await DriveService.uploadFile(file);
+    final photoDir = await _photoDirectory();
+
+    // await DriveService.backupAllPhotos(photoDir);
+
+    print("PHOTO BACKUP START");
+    await DriveService.backupAllPhotos(photoDir);
+    print("PHOTO BACKUP END");
+
+    print("BACKUP COMPLETED");
+  }
+
+  // ==========================
+  // RESTORE DATABASE + PHOTOS
+  // ==========================
+
+  static Future<void> restoreFromDrive() async {
+    final ok = await DriveService.initialize();
+
+    if (!ok) {
+      throw Exception("Google Drive login failed.");
+    }
+
+    final db = await _databaseFile();
+
+    await DriveService.downloadDatabase(db);
+
+    final photoDir = await _photoDirectory();
+
+    await DriveService.restoreAllPhotos(photoDir);
+
+    print("RESTORE COMPLETED");
   }
 }
+

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:myapp/services/restore_service.dart';
+
 
 import '../backup/google_auth_service.dart';
 import '../backup/drive_service.dart';
 import '../home/home_page.dart';
+import '../backup/backup_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,46 +18,58 @@ class _LoginScreenState extends State<LoginScreen> {
   bool loading = false;
 
   Future<void> login() async {
-    setState(() => loading = true);
+  setState(() => loading = true);
 
+  try {
+    final user = await GoogleAuthService.signIn();
+
+    if (user == null) {
+      setState(() => loading = false);
+      return;
+    }
+
+    // Initialize Google Drive
+    final ok = await DriveService.initialize();
+
+    if (!ok) {
+      throw Exception("Google Drive initialization failed.");
+    }
+
+    // Restore যদি backup থাকে
     try {
-      final user = await GoogleAuthService.signIn();
-
-      if (user == null) {
-        setState(() => loading = false);
-        return;
-      }
-
-      // Initialize Google Drive
-      await DriveService.initDrive(user);
-
-      // Restore Firebase data to local SQLite
-      await RestoreService.restoreAll();
-
-      // Save login status (Only first login)
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool("google_logged_in", true);
-
-      if (!mounted) return;
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const HomePage(),
-        ),
-      );
+      await BackupService.restoreFromDrive();
+      debugPrint("Restore completed.");
     } catch (e) {
-      if (!mounted) return;
+      // প্রথমবার Login হলে backup না থাকাটা স্বাভাবিক
+      debugPrint("No backup found. Skipping restore.");
+    }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login failed: $e")),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => loading = false);
-      }
+    // Save login status
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool("google_logged_in", true);
+
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const HomePage(),
+      ),
+    );
+  } catch (e) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Login failed: $e"),
+      ),
+    );
+  } finally {
+    if (mounted) {
+      setState(() => loading = false);
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {

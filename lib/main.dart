@@ -1,26 +1,18 @@
 import 'package:flutter/material.dart';
-import 'firebase_options.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:myapp/services/network_watcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:myapp/services/network_watcher.dart';
+
 import 'features/auth/login_screen.dart';
-import 'features/splash/splash_screen.dart';
-// import 'main_home.dart';
 import 'features/home/home_page.dart';
-bool firebaseReady = false;
+import 'features/splash/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  firebaseReady = true;
-
   runApp(const MyApp());
 
-  // ⚠️ AFTER APP START, NOT BEFORE
+  // Start network watcher after app starts
   Future.delayed(const Duration(seconds: 2), () {
     NetworkWatcher.startListening();
   });
@@ -31,9 +23,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: SplashRouter(),
+      title: "Smart Shop",
+      theme: ThemeData(
+        useMaterial3: true,
+      ),
+      home: const SplashRouter(),
     );
   }
 }
@@ -64,7 +60,8 @@ class _SplashRouterState extends State<SplashRouter> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => loggedIn ? HomePage() : const LoginScreen(),
+        builder: (_) =>
+            loggedIn ? const HomePage() : const LoginScreen(),
       ),
     );
   }
