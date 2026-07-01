@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:http/http.dart' as http;
+import 'package:myapp/db/db_helper.dart';
 
 class GoogleAuthClient extends http.BaseClient {
   GoogleAuthClient(this._headers);
@@ -118,21 +119,38 @@ class DriveService {
     await _api!.files.delete(oldFile.id!);
   }
 
-  static Future<void> uploadDatabase(File databaseFile) async {
-    final ok = await initialize();
-    if (!ok) {
-      throw Exception('Google Drive login failed.');
-    }
+static Future<void> uploadDatabase(File databaseFile) async {
 
-    await _deleteOldDatabase();
-    final media = drive.Media(databaseFile.openRead(), databaseFile.lengthSync());
-    final driveFile = drive.File()
-      ..name = 'store.db'      
-      ..parents = [_databaseFolderId!];
+  final db = await DBHelper.db;
+  await db.close();
+  DBHelper.reset();
 
-    await _api!.files.create(driveFile, uploadMedia: media);
-    print('DATABASE BACKUP SUCCESS');
+  final ok = await initialize();
+
+  if (!ok) {
+    throw Exception('Google Drive login failed.');
   }
+
+  await _deleteOldDatabase();
+
+  final media = drive.Media(
+    databaseFile.openRead(),
+    databaseFile.lengthSync(),
+  );
+
+  final driveFile = drive.File()
+    ..name = "store.db"
+    ..parents = [_databaseFolderId!];
+
+  await _api!.files.create(
+    driveFile,
+    uploadMedia: media,
+  );
+
+  print("DATABASE BACKUP SUCCESS");
+
+  await DBHelper.db;
+}
 
   static Future<void> downloadDatabase(File destination) async {
     final ok = await initialize();

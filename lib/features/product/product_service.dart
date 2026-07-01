@@ -1,4 +1,5 @@
 import '../../db/db_helper.dart';
+import '../backup/backup_engine.dart';
 
 class ProductService {
 
@@ -30,10 +31,14 @@ class ProductService {
 
   static Future<int> insertProduct(Map<String, dynamic> data) async {
     final db = await DBHelper.db;
-    return await db.insert('products', data);
+
+    final id = await db.insert('products', data);
+
+    BackupEngine.markDirty();
+
+    return id;
   }
 
-  // ✅ ADD THIS: GET BY BARCODE
   static Future<Map<String, dynamic>?> getByBarcode(String barcode) async {
     final db = await DBHelper.db;
 
@@ -47,21 +52,25 @@ class ProductService {
     if (result.isNotEmpty) {
       return result.first;
     }
+
     return null;
   }
 
-  // ✅ ADD THIS: UPDATE STOCK
   static Future<int> updateStock({
     required String barcode,
     required int newStock,
   }) async {
     final db = await DBHelper.db;
 
-    return await db.update(
+    final rows = await db.update(
       'products',
       {'stock': newStock},
       where: 'barcode = ?',
       whereArgs: [barcode],
     );
+
+    BackupEngine.markDirty();
+
+    return rows;
   }
 }

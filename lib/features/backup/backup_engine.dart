@@ -1,7 +1,8 @@
 import 'dart:async';
 
-import '../network/network_service.dart';
+import 'package:flutter/foundation.dart';
 
+import '../network/network_service.dart';
 import 'backup_service.dart';
 
 class BackupEngine {
@@ -10,63 +11,71 @@ class BackupEngine {
   static Timer? _timer;
 
   static bool _dirty = false;
-
   static bool _uploading = false;
 
-  // ==========================
-  // Database Changed
-  // ==========================
+  /// Database changed
+static void markDirty() {
+  print("MARK DIRTY CALLED");
 
-  static void markDirty() {
-    _dirty = true;
+  _dirty = true;
 
-    _timer?.cancel();
+  _timer?.cancel();
 
-    _timer = Timer(
-      const Duration(seconds: 3),
-      () async {
-        await _backupIfNeeded();
-      },
-    );
+  _timer = Timer(
+    const Duration(seconds: 3),
+    () async {
+      print("3 SECOND TIMER FINISHED");
+      await _backupIfNeeded();
+    },
+  );
+}
+
+  /// Backup if needed
+static Future<void> _backupIfNeeded() async {
+
+  print("BACKUP IF NEEDED");
+
+  if (!_dirty) {
+    print("NOT DIRTY");
+    return;
   }
 
-  // ==========================
-  // Backup
-  // ==========================
-
-  static Future<void> _backupIfNeeded() async {
-    if (!_dirty) {
-      return;
-    }
-
-    if (_uploading) {
-      return;
-    }
-
-    final hasInternet =
-        await NetworkService.hasInternet();
-
-    if (!hasInternet) {
-      return;
-    }
-
-    _uploading = true;
-
-    try {
-      await BackupService.backupToDrive();
-
-      _dirty = false;
-    } catch (e) {
-      print("AUTO BACKUP ERROR : $e");
-    }
-
-    _uploading = false;
+  if (_uploading) {
+    print("ALREADY UPLOADING");
+    return;
   }
 
-  // ==========================
-  // Force Backup
-  // ==========================
+  final hasInternet =
+      await NetworkService.hasInternet();
 
+  print("Internet = $hasInternet");
+
+  if (!hasInternet) {
+    return;
+  }
+
+  _uploading = true;
+
+  try {
+
+    print("CALLING BackupService");
+
+    await BackupService.backupToDrive();
+
+    print("BACKUP DONE");
+
+    _dirty = false;
+
+  } catch (e) {
+
+    print(e);
+
+  }
+
+  _uploading = false;
+}
+
+  /// Manual backup
   static Future<void> backupNow() async {
     _timer?.cancel();
 

@@ -1,4 +1,6 @@
 import 'package:myapp/db/db_helper.dart';
+import '../backup/backup_engine.dart';
+
 class SellService {
 
   static Future<Map<String, dynamic>?> getProductByBarcode(String barcode) async {
@@ -25,6 +27,8 @@ class SellService {
       where: 'barcode = ?',
       whereArgs: [barcode],
     );
+
+    BackupEngine.markDirty();
   }
 
   static Future<void> insertSale({
@@ -41,5 +45,7 @@ class SellService {
       'total': qty * sellPrice,
       'date': DateTime.now().toString(),
     });
+
+    BackupEngine.markDirty();
   }
 }

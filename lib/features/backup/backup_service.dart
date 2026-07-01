@@ -44,17 +44,28 @@ class BackupService {
 
     final db = await _databaseFile();
 
+    print("========== BACKUP ==========");
+    print("Database Path : ${db.path}");
+    print("Database Exists : ${await db.exists()}");
+
+    if (await db.exists()) {
+      print("Database Size : ${await db.length()} bytes");
+    }
+
     await DriveService.uploadDatabase(db);
 
     final photoDir = await _photoDirectory();
 
-    // await DriveService.backupAllPhotos(photoDir);
+    print("Photo Folder : ${photoDir.path}");
 
-    print("PHOTO BACKUP START");
+    final photos = photoDir.listSync();
+
+    print("Total Photos : ${photos.length}");
+
     await DriveService.backupAllPhotos(photoDir);
-    print("PHOTO BACKUP END");
 
     print("BACKUP COMPLETED");
+    print("============================");
   }
 
   // ==========================
@@ -79,4 +90,3 @@ class BackupService {
     print("RESTORE COMPLETED");
   }
 }
-

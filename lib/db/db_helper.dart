@@ -312,4 +312,7 @@ class DBHelper {
     final dbClient = await db;
     return dbClient.query('products');
   }
+  static void reset() {
+    _db = null;
+  }
 }
